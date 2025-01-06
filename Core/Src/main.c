@@ -113,6 +113,9 @@ int main(void)
 	RELAY1_ON
 	Battery_EN_ON
 	Adc_start();
+	
+	Motor_BD_State = 0;
+	mcu_eeprom_write(20,(uint8_t *)&Motor_BD_State,1);
   Motor_BD();
 	mcu_eeprom_read(0,(uint8_t *)&Connect_State,1);	
 	if(Connect_State == 1)

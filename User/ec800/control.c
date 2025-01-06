@@ -243,7 +243,7 @@ void Motor_BD(void)
 							Motor_OFF
 							if(strstr((char *)Uart1_Data,"OK")){
 								//Motor_brake
-								User_Data.motor_0_val =ADC_Values[0];
+								User_Data.motor_180_val =ADC_Values[0];
 								Motor_OFF
 								if(ADC_Values[0]<=User_Data.motor_90_val){
 									Motor_brake
@@ -255,9 +255,14 @@ void Motor_BD(void)
 						default:
 							break;
 					
-					}
-				
+					}					
 					Get_Adc_Value();
+					if(BD_State == 3){
+							BD_State = 0;
+							Motor_BD_State = 1;
+							mcu_eeprom_write(20,(uint8_t *)&Motor_BD_State,1);
+							break;
+					}
 				}
 			}
 		
