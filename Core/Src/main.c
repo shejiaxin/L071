@@ -158,7 +158,7 @@ int main(void)
 		{
 //			LPUART1Flag = 0;//清除计数
 //			LPUART1Cnt = 0;//清除接收结束标志位
-			if(strstr((char *)LPUART1_Data,"+QMTRECV: 0,0")){
+			if(strstr((char *)LPUART1_Data,"+QMTRECV: 0,0")&&strstr((char *)LPUART1_Data,(char *)User_Data.imei)){
 				printf("Sever_data=%s\r\n",LPUART1_Data);
 				if(strstr((char *)LPUART1_Data,"A5")){
 					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
