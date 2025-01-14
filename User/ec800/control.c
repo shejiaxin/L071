@@ -62,8 +62,39 @@ static float calculateBatteryPercentage(float voltage, struct BatteryMapping* ma
     }
     return -1.0;  // Return -1 if the voltage is out of range
 }
+
+
+struct motor_Data {
+    int motor_0_val;
+    int motor_90_val_2t;
+		int motor_90_val_4t;
+		int motor_180_val;
+};
+
+int calculateMotorAngle_2t(int adcValue, struct motor_Data* userData) {
+    int adcIncrement = (userData->motor_90_val_2t - userData->motor_0_val) / 9;
+//    if (adcValue < userData->motor_0_val || adcValue > userData->motor_180_val) {
+//        return 200;  // Return -1 if the ADC value is out of range
+//    }
+    return ((adcValue - userData->motor_0_val) / adcIncrement) * 10;
+
+}
+int calculateMotorAngle_4t(int adcValue, struct motor_Data* userData) {
+    int adcIncrement = (userData->motor_180_val - userData->motor_90_val_4t ) / 9;
+//    if (adcValue < userData->motor_90_val_4t || adcValue > userData->motor_180_val) {
+//        return 200;  // Return -1 if the ADC value is out of range
+//    }
+     return ((adcValue - userData->motor_90_val_4t) / adcIncrement) * 10;
+
+}
 void read_SW(void)
 {		
+		struct motor_Data userData = {
+        .motor_0_val = User_Data.motor_0_val,
+        .motor_90_val_2t = User_Data.motor_90_val_2t,
+				.motor_90_val_4t = User_Data.motor_90_val_4t,
+        .motor_180_val = User_Data.motor_180_val
+    };
 		User_Data.adc = calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
 		if(IO1_IN==1&&IO2_IN==0){
 			User_Data.Switch_Type=1;
@@ -77,38 +108,42 @@ void read_SW(void)
 		
 		User_Data.Double_Type=Get_Valve_Voltage(0);
 		
+		if(ADC_Values[0] <= User_Data.motor_90_val_2t && ADC_Values[0] >= User_Data.motor_0_val)
+			User_Data.motor_Type = calculateMotorAngle_2t(ADC_Values[0], &userData);
+		if(ADC_Values[3] >= User_Data.motor_90_val_4t && ADC_Values[3] <= User_Data.motor_180_val)
+			User_Data.motor_Type = calculateMotorAngle_4t(ADC_Values[3], &userData)+90;
 
-		if(ADC_Values[0] >= 1665 && ADC_Values[0] < 1761){
-			User_Data.motor_Type =0;
-		}
-		else if(ADC_Values[0] >= 1665 && ADC_Values[0] < 1761){
-			User_Data.motor_Type =10;
-		}
-		else if(ADC_Values[0] >= 1761 && ADC_Values[0] < 1858){
-					User_Data.motor_Type =20;
-		}	
-		else if(ADC_Values[0] >= 1858 && ADC_Values[0] < 1954){
-					User_Data.motor_Type =30;
-		}	
-		else if(ADC_Values[0] >= 1954 && ADC_Values[0] < 2051){
-					User_Data.motor_Type =40;
-		}	
-		else if(ADC_Values[0] >= 2051 && ADC_Values[0] < 2147){
-					User_Data.motor_Type =50;
-		}	
-		else if(ADC_Values[0] >= 2147 && ADC_Values[0] < 2340){
-					User_Data.motor_Type =60;
-		}	
-		else if(ADC_Values[0] >= 2340 && ADC_Values[0] < 2437){
-					User_Data.motor_Type =70;
-		}	
-		else if(ADC_Values[0] >= 2437 && ADC_Values[0] < 2533){
-					User_Data.motor_Type =80;
-		}	
-		else if(ADC_Values[0] >= 2533 && ADC_Values[0] < 2600){
-					User_Data.motor_Type =90;
-		}	
-		
+//		if(ADC_Values[0] >= User_Data.motor_0_val && ADC_Values[0] < (User_Data.motor_0_val )){
+//			User_Data.motor_Type =0;
+//		}
+//		else if(ADC_Values[0] >= 1665 && ADC_Values[0] < 1761){
+//			User_Data.motor_Type =10;
+//		}
+//		else if(ADC_Values[0] >= 1761 && ADC_Values[0] < 1858){
+//					User_Data.motor_Type =20;
+//		}	
+//		else if(ADC_Values[0] >= 1858 && ADC_Values[0] < 1954){
+//					User_Data.motor_Type =30;
+//		}	
+//		else if(ADC_Values[0] >= 1954 && ADC_Values[0] < 2051){
+//					User_Data.motor_Type =40;
+//		}	
+//		else if(ADC_Values[0] >= 2051 && ADC_Values[0] < 2147){
+//					User_Data.motor_Type =50;
+//		}	
+//		else if(ADC_Values[0] >= 2147 && ADC_Values[0] < 2340){
+//					User_Data.motor_Type =60;
+//		}	
+//		else if(ADC_Values[0] >= 2340 && ADC_Values[0] < 2437){
+//					User_Data.motor_Type =70;
+//		}	
+//		else if(ADC_Values[0] >= 2437 && ADC_Values[0] < 2533){
+//					User_Data.motor_Type =80;
+//		}	
+//		else if(ADC_Values[0] >= 2533 && ADC_Values[0] < 2600){
+//					User_Data.motor_Type =90;
+//		}	
+//		
 //		if(ADC_Values[3] >= 1665 && ADC_Values[0] < 1761){
 //			User_Data.motor_Type =0;
 //		}
@@ -179,7 +214,7 @@ void Control(DATA data)
 void Motor_Control(void)
 {
 	if(User_Data.control_state ==1){
-		if(User_Data.motor_Type == 1){
+		if(User_Data.motor_Type >= 1){
 			Motor_ON
 			if(ADC_Values[0] >= 3290 ){
 				Motor_brake
@@ -206,71 +241,115 @@ void Motor_BD(void)
 {
 	mcu_eeprom_read(20,(uint8_t *)&Motor_BD_State,1);
 	while(Motor_BD_State ==0 ){
-			if(User_Data.SysTick_10S %1000 == 0)
-				printf("未标定\r\n");
 			User_Data.SysTick_10S_start = 1;
+			if(User_Data.SysTick_10S >= 10000){
+				User_Data.SysTick_10S = 0;
+				User_Data.SysTick_10S_start = 0;
+				break;
+			}
+			if(User_Data.SysTick_10S %1000 == 0)
+				printf("未标定,输入“BD”开始标定,\r\n");
+			
 			
 			if(strstr((char *)Uart1_Data,"BD"))//if(Uart1_Data[0] == 0xBD && KEY_PB9_IN == RESET)
 			{
-				User_Data.SysTick_10S = 0;
-				User_Data.SysTick_10S_start = 0;
+
 				while(1){
 					switch(BD_State){
 						case 0:
-							PWR12V_ON
-							Motor_OFF
-							if(strstr((char *)Uart1_Data,"OK")){
-								Motor_brake
-								User_Data.motor_90_val =ADC_Values[0];
-								BD_State = 1;
-								memset(Uart1_Data,0,10);
-							}		
+							Motor_OFF						
+							BD_State = 1;
+							printf("电机反转,开始标定90°位置\r\n输入“OK”标定90°位置");
 							break;
 						case 1:
-							Motor_ON
 							if(strstr((char *)Uart1_Data,"OK")){
-								//Motor_brake
-								User_Data.motor_0_val =ADC_Values[0];
-								Motor_OFF
-								if(ADC_Values[0]<=User_Data.motor_90_val){
-									Motor_brake
-									BD_State = 2;
-									memset(Uart1_Data,0,10);
-								}								
-							}	
+								Motor_brake
+								User_Data.motor_90_val_2t =ADC_Values[0];
+								User_Data.motor_90_val_4t =ADC_Values[3];		
+								printf("90°位置标定为2t_ADC：%d,4t_ADC：%d,\r\n",User_Data.motor_90_val_2t,User_Data.motor_90_val_4t);
+								printf("输入“BD0”开始标定0°位置,\r\n");								
+								memset(Uart1_Data,0,10);
+							}
+							if(strstr((char *)Uart1_Data,"BD0")){
+								BD_State = 2;						
+								memset(Uart1_Data,0,10);
+							}
 							break;
 						case 2:
-							Motor_OFF
+							Motor_ON
+							BD_State = 3;
+							printf("电机正转,开始标定0°位置,\r\n输入“OK”标定0°位置\r\n");
+							
+							break;
+						case 3:
 							if(strstr((char *)Uart1_Data,"OK")){
-								//Motor_brake
-								User_Data.motor_180_val =ADC_Values[0];
-								Motor_OFF
-								if(ADC_Values[0]<=User_Data.motor_90_val){
-									Motor_brake
-									BD_State = 3;
+								User_Data.motor_0_val =ADC_Values[0];
+								printf("0°位置标定为ADC：%d,\r\n",User_Data.motor_0_val);																		
+								Motor_OFF		
+								memset(Uart1_Data,0,10);
+								BD_State = 4;	
+							}
+							break;
+						case 4:									
+								if(User_Data.SysTick_10S %1000 == 0)
+									printf("电机反转，等待回90°位置\r\n");		
+								if(ADC_Values[0] >= User_Data.motor_90_val_2t){
+									Motor_brake	
+									printf("电机已回90°位置\r\n");
+									BD_State = 5;		
+								}		
+							break;
+						case 5:
+								if(User_Data.SysTick_10S %1000 == 0)
+									printf("输入“BD180”开始标定0°位置,\r\n");
+								if(strstr((char *)Uart1_Data,"BD180")){		
+									printf("电机反转,开始标定180°位置,\r\n输入“OK”标定180°位置\r\n");
+									Motor_OFF		
+									BD_State = 6;		
 									memset(Uart1_Data,0,10);
-								}								
+								}		
+							break;
+						case 6:	
+							if(strstr((char *)Uart1_Data,"OK")){
+								User_Data.motor_180_val =ADC_Values[3];
+								printf("180°位置标定为ADC：%d,\r\n",User_Data.motor_180_val);		
+								memset(Uart1_Data,0,10);
+								Motor_ON
+								BD_State = 7;		
 							}	
+							break;
+						case 7:
+							if(User_Data.SysTick_10S %1000 == 0)
+								printf("电机反转，等待回90°位置\r\n");		
+							if(ADC_Values[3]<=User_Data.motor_90_val_4t){
+								Motor_brake
+								printf("电机已回90°位置\r\n");
+								printf("标定完成\r\n");
+								BD_State = 8;
+								memset(Uart1_Data,0,10);
+							}						
 							break;
 						default:
 							break;
 					
 					}					
 					Get_Adc_Value();
-					if(BD_State == 3){
+					if(BD_State >= 8){
 							BD_State = 0;
 							Motor_BD_State = 1;
+							User_Data.SysTick_10S = 0;
+							User_Data.SysTick_10S_start = 0;
 							mcu_eeprom_write(20,(uint8_t *)&Motor_BD_State,1);
+							mcu_eeprom_write(21,(uint8_t *)&User_Data.motor_0_val,4);
+							mcu_eeprom_write(26,(uint8_t *)&User_Data.motor_90_val_2t,4);
+							mcu_eeprom_write(31,(uint8_t *)&User_Data.motor_90_val_4t,4);
+							mcu_eeprom_write(36,(uint8_t *)&User_Data.motor_180_val,4);
 							break;
 					}
 				}
 			}
 		
-		if(User_Data.SysTick_10S >= 10000){
-			User_Data.SysTick_10S = 0;
-			User_Data.SysTick_10S_start = 0;
-			break;
-		}
+		
 
 	
 	}

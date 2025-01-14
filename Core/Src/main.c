@@ -114,9 +114,11 @@ int main(void)
 	Battery_EN_ON
 	Adc_start();
 	
-	Motor_BD_State = 0;
-	mcu_eeprom_write(20,(uint8_t *)&Motor_BD_State,1);
   Motor_BD();
+	mcu_eeprom_read(21,(uint8_t *)&User_Data.motor_0_val,4);
+	mcu_eeprom_read(26,(uint8_t *)&User_Data.motor_90_val_2t,4);
+	mcu_eeprom_read(31,(uint8_t *)&User_Data.motor_90_val_4t,4);
+	mcu_eeprom_read(36,(uint8_t *)&User_Data.motor_180_val,4);
 	mcu_eeprom_read(0,(uint8_t *)&Connect_State,1);	
 	if(Connect_State == 1)
 	{

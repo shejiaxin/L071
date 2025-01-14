@@ -17,7 +17,7 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 	/*           接收设置LoRa模块返回数据           */
 	/*----------------------------------------------*/
 	uint8_t cmd[3]={0xc1,0x00,0x07};
-	Modbus_CRC16(data, datalen);
+	//Modbus_CRC16(data, datalen);
 	
 		switch (data[0]){
 			case 0xE0:
@@ -69,16 +69,14 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 				HAL_Delay(200); 	
 			  HAL_UART_Transmit(&huart2, cmd, 3, 0xFF);//发送数据
 				break;
-			case 0xBD:
-				PWR18V_ON
-				PWR12V_ON
-				Motor_ON
-				break;
 			case 0xB1:
 				Motor_OFF
 				break;
 			case 0xB2:
 				Motor_brake
+				break;
+			case 0xB3:
+				Motor_ON
 				break;
 			case 0xE6:
 				break;
@@ -87,8 +85,13 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 			default:
 				break;
 		}
-
+		if(strcmp((char *)data,"BD") ==0 || strstr((char *)data,"BD")){
+			Motor_BD_State = 0;
+			mcu_eeprom_write(20,(uint8_t *)&Motor_BD_State,1);
+			Motor_BD();
 		
+		}
+
 		
 //		printf("接收设置LoRa模块返回数据\r\n");           //串口输出信息
 //		LoRa_Get(data);                                      //分析设置的参数

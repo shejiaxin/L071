@@ -35,7 +35,8 @@ typedef struct
 	uint8_t SysTick_10S_start;
 	
 	uint16_t motor_0_val;   //逆时针 -90°的ADC标定电压
-	uint16_t motor_90_val;  // 0°的ADC标定电压
+	uint16_t motor_90_val_2t;  // 0°的2tADC标定电压
+	uint16_t motor_90_val_4t;  // 0°的2tADC标定电压
 	uint16_t motor_180_val; //顺时针 -90°的ADC标定电压
 	
   uint16_t adc;
