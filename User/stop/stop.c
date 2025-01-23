@@ -228,6 +228,7 @@ static void gpioInit(void)
 		
 		IO1_OFF
 		PWR12V_ON
+		MCP3421_Init();
 		EC20_Init();
 }
 void lora_enter_stop_rtc_mode(uint32_t time)
@@ -246,12 +247,13 @@ void lora_enter_stop_rtc_mode(uint32_t time)
 		//4.恢复各外设
     gpioInit();
 		printf("退出休眠\r\n");
-		MX_USART1_UART_Init();
+
 	  E22_ON;
 		HAL_Delay(500);
 		
 		IO1_OFF
 		PWR12V_ON
+		MCP3421_Init();
 		LoRa_Init();
 }
 

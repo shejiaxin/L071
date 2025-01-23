@@ -53,8 +53,14 @@ _Bool UART_SendCmd(char *cmd, char *res, uint16_t timeout)
 			if(strstr((const char *)LPUART1_Data, res) != NULL)		
 			{
 				if(strstr(cmd,"CGSN")){
-					strncpy(User_Data.imei,(char *)LPUART1_Data+10, 15);
-			}
+					strncpy(User_Data.imei,(char *)LPUART1_Data+10, 15);				
+				}
+				if(strstr(cmd,"CSQ")){
+					char *csqPos = strstr((char *)LPUART1_Data, "+CSQ:");
+						if(csqPos != NULL) {
+								sscanf(csqPos, "+CSQ: %d", &User_Data.csq);
+						}
+				}
 				UART_Clear();									
 				return 0;
 			}
@@ -173,8 +179,8 @@ void EC20_Init(void)
 		RTC_Time();
 		Get_Adc_Value();
 		
-//		PWR12V_ON
-//		HAL_Delay(10);
+		PWR12V_ON
+		HAL_Delay(1000);
 		read_SW();
 		
 		memset(main_buff1,0,sizeof(main_buff1));
@@ -184,11 +190,75 @@ void EC20_Init(void)
 		MQTT_PublishQs0(main_buff1,main_len);	
   	UART_Clear();
 		
-//		PWR12V_OFF
-//		HAL_Delay(10);
+		PWR12V_OFF
+		HAL_Delay(100);
 }
 
+/*-------------------------------------------------*/
+/*函数名：LPUART1被动事件                            */
+/*参  数：data ：数据                              */
+/*参  数：datalen ：数据长度                       */
+/*返回值：无                                       */
+/*-------------------------------------------------*/
+void U3PassiveEvent(uint8_t *data, uint16_t datalen)
+{ 
+		printf("4GSever_数据 %s\r\n",data);
+		if(strstr((char *)data,"+QMTRECV: 0,0")&&strstr((char *)data,(char *)User_Data.imei)){				
 
+			if(strstr((char *)data,"A5")){
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				RTC_Time();
+						
+				PWR12V_ON
+				HAL_Delay(1000);
+				read_SW();
+				memset(main_buff1,0,sizeof(main_buff1));
+				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
+				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+				MQTT_PublishQs0(main_buff1,main_len);	
+				PWR12V_OFF
+				HAL_Delay(100);
+			}
+			else if(strstr((char *)data,"A1")&&strstr((char *)data,(char *)User_Data.imei)){
+				get_A1_data((char *)data);
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				Control(&User_Data);
+				memset(main_buff1,0,sizeof(main_buff1));
+				main_len=sprintf(main_buff1,"B1,%s,OK",User_Data.imei);
+				MQTT_PublishQs0(main_buff1,main_len);
+			}
+			else if(strstr((char *)data,"A2")&&strstr((char *)data,(char *)User_Data.imei)){
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				memset(main_buff1,0,sizeof(main_buff1));
+				main_len=sprintf(main_buff1,"B2,%s,OK",User_Data.imei);
+				MQTT_PublishQs0(main_buff1,main_len);
+				enter_stop_rtc_mode(User_Data.Wake_time);
+			}
+			else if(strstr((char *)data,"A3")&&strstr((char *)data,(char *)User_Data.imei)){
+				get_A3_data((char *)data);
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				memset(main_buff1,0,sizeof(main_buff1));
+				main_len=sprintf(main_buff1,"B3,%s,OK",User_Data.imei);
+				MQTT_PublishQs0(main_buff1,main_len);
+			
+			}
+			else if(strstr((char *)data,"A4")&&strstr((char *)data,(char *)User_Data.imei)){
+				get_A4_data((char *)data);
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				memset(main_buff1,0,sizeof(main_buff1));
+				main_len=sprintf(main_buff1,"B4,%s,OK",User_Data.imei);
+				MQTT_PublishQs0(main_buff1,main_len);
+
+			}
+			else;			
+	}	
+}
 
 void Secrecy_GetUID(uint32_t * pBuf)
 {

@@ -4,7 +4,77 @@
 #include <stdio.h>
 #include "user_usart.h"
 
-
+void LoRa_GetData(LoRaParameter LoRa)
+{	         			           	                                
+	printf("模块地址:0x%02X\r\n",LoRa.LoRa_AddrL);                //串口输出信息
+	switch(LoRa.LoRa_UartMode){                                                //判断串口参数
+		case LoRa_8N1 :	 printf("8数据位 无校验 1停止位\r\n");        //串口输出信息
+						 break;                                          //跳出
+		case LoRa_8O1 :	 printf("8数据位 奇校验 1停止位\r\n");        //串口输出信息
+						 break;                                          //跳出
+		case LoRa_8E1 :	 printf("8数据位 偶校验 1停止位\r\n");        //串口输出信息
+						 break;                                          //跳出
+		default:
+			break;
+	}
+	switch(LoRa.LoRa_Baudrate){                                                //判断串口波特率
+		case LoRa_1200 : printf("波特率 1200\r\n");                   //串口输出信息
+						 break;                                          //跳出
+		case LoRa_2400 : printf("波特率 2400\r\n");                   //串口输出信息
+						 break;                                          //跳出
+		case LoRa_4800 : printf("波特率 4800\r\n");                   //串口输出信息
+						 break;                                          //跳出
+		case LoRa_9600 : printf("波特率 9600\r\n");                   //串口输出信息
+						 break;                                          //跳出
+		case LoRa_19200 : printf("波特率 19200\r\n");                 //串口输出信息
+						 break;                                          //跳出
+		case LoRa_38400 : printf("波特率 38400\r\n");                 //串口输出信息
+						 break;                                          //跳出
+		case LoRa_57600 : printf("波特率 57600\r\n");                 //串口输出信息
+						 break;                                          //跳出
+		case LoRa_115200: printf("波特率 115200\r\n");                //串口输出信息
+						 break;                                          //跳出
+		default:
+			break;
+	}
+	
+	switch(LoRa.LoRa_airvelocity){                                                //判断空中速率                                      //跳出
+		case LoRa_2_4_1:
+		case LoRa_2_4_2:
+		case LoRa_2_4 :  printf("空中速率 2.4K\r\n");                 //串口输出信息
+						 break;                                          //跳出
+		case LoRa_4_8 :  printf("空中速率 4.8K\r\n");                 //串口输出信息
+						 break;                                          //跳出
+		case LoRa_9_6 :  printf("空中速率 9.6K\r\n");                 //串口输出信息
+						 break;                                          //跳出
+		case LoRa_19_2 : printf("空中速率 19.2K\r\n");                //串口输出信息
+						 break;                                          //跳出
+		case LoRa_38_4 : printf("空中速率 19.2K\r\n");                //串口输出信息
+				 break;                                          //跳出
+		case LoRa_62_5 : printf("空中速率 19.2K\r\n");                //串口输出信息
+				 break;                                          //跳出
+		default:
+			break;
+	}
+	switch(LoRa.LoRa_TxPower){                                                //判断发射功率
+		case LoRa_FEC_33DBM :  printf("发射功率 33dbm\r\n");          //串口输出信息
+							   break;                                    //跳出
+		case LoRa_FEC_30DBM :  printf("发射功率 30dbm\r\n");          //串口输出信息
+							   break;                                    //跳出
+		case LoRa_FEC_27DBM :  printf("发射功率 27dbm\r\n");          //串口输出信息
+							   break;                                    //跳出
+		case LoRa_FEC_24DBM :  printf("发射功率 24dbm\r\n");          //串口输出信息
+							   break;                                    //跳出
+	}
+	printf("信道:0x%02X  对应频率%dMHz\r\n",LoRa.LoRa_CH,410+(LoRa.LoRa_CH));   //串口输出信息
+		
+	switch(LoRa.LoRa_DateMode){                                                //判断传输模式
+		case LoRa_TRANS : printf("透明传输模式\r\n");                 //串口输出信息
+						  break;                                         //跳出
+		case LoRa_POINT : printf("定点传输模式\r\n");                 //串口输出信息
+						  break;                                         //跳出
+	}
+}
 /*-------------------------------------------------*/
 /*函数名：debug串口1被动事件                            */
 /*参  数：data ：数据                              */
@@ -65,9 +135,10 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 				NVIC_SystemReset();                           //重启
 				break;
 			case 0xE2:
-				LoRa_MODE2; 
-				HAL_Delay(200); 	
-			  HAL_UART_Transmit(&huart2, cmd, 3, 0xFF);//发送数据
+				LoRa_GetData(LoRaNet);
+//				LoRa_MODE2; 
+//				HAL_Delay(200); 	
+//			  HAL_UART_Transmit(&huart2, cmd, 3, 0xFF);//发送数据
 				break;
 			case 0xB1:
 				Motor_OFF

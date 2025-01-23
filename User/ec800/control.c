@@ -109,7 +109,6 @@ int calculateRange(uint32_t reading)
 }
 void read_SW(void)
 {		
-		PWR12V_ON
 		struct motor_Data userData = {
         .motor_0_val = User_Data.motor_0_val,
         .motor_90_val_2t = User_Data.motor_90_val_2t,

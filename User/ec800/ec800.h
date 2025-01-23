@@ -62,6 +62,7 @@ typedef struct
 	uint32_t Wake_time;	
 	uint32_t uuid[3];
 	char imei[16];
+	int csq;
 	char Time_Data[20];
 	uint16_t lora_id;
 	uint16_t lora_rssi;
@@ -82,7 +83,7 @@ void Usart_SendString(uint8_t *str);
 void MQTT_PublishQs0(char *data,uint16_t size);  
 
 
-
+void U3PassiveEvent(uint8_t *data, uint16_t datalen);
 void Secrecy_GetUID(uint32_t * pBuf);
 void get_A1_data(char *data);
 void get_A3_data(char *data);

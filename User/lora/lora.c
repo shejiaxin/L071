@@ -74,18 +74,18 @@ void LoRa_Init(void)
 	LoRa_MODE0;	
 	HAL_Delay(200);
 	RTC_Time();
-	
-//	PWR12V_ON
-//	HAL_Delay(10);
+	Get_Adc_Value();
+	PWR12V_ON
+	HAL_Delay(1000);
 	read_SW();
 	memset(main_buff1,0,sizeof(main_buff1));
-	main_len=sprintf(main_buff1,"B5,%d,,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+	main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
 		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
 		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
 	HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 	
-//	PWR12V_OFF
-//	HAL_Delay(10);
+	PWR12V_OFF
+	HAL_Delay(100);
 }
 /*-------------------------------------------------*/
 /*函数名：LoRa设置工作参数                         */
@@ -253,8 +253,8 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 	if(strstr((char *)data,"A5")&& (LoRaNet.LoRa_AddrL   == User_Data.lora_id)){
 		RTC_Time();
 		
-//		PWR12V_ON
-//		HAL_Delay(10);
+		PWR12V_ON
+		HAL_Delay(1000);
 		read_SW();
 		memset(main_buff1,0,sizeof(main_buff1));
 		main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
@@ -262,8 +262,8 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 		
-//		PWR12V_OFF
-//		HAL_Delay(10);
+		PWR12V_OFF
+		HAL_Delay(100);
 	}
 	else if(strstr((char *)data,"A1")&&(LoRaNet.LoRa_AddrL  == User_Data.lora_id)){
 		lora_get_A1_data((char *)data);

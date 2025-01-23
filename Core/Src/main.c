@@ -118,8 +118,8 @@ int main(void)
 	//GetSystemClocks();
 	IO1_OFF
 
-	PWR18V_ON
-	PWR12V_ON
+//	PWR18V_ON
+//	PWR12V_ON
 
 	Battery_EN_ON
 	Adc_start();
@@ -130,7 +130,11 @@ int main(void)
 	mcu_eeprom_read(31,(uint8_t *)&User_Data.motor_90_val_4t,4);
 	mcu_eeprom_read(36,(uint8_t *)&User_Data.motor_180_val,4);
 	mcu_eeprom_read(0,(uint8_t *)&Connect_State,1);	
-
+	
+	User_Data.Wake_time=20;
+	
+	MCP3421_Init();
+	
 	if(Connect_State == 1)
 	{
 		LoRa_PowerON;
@@ -147,9 +151,9 @@ int main(void)
 	
 	printf("初始化完成\r\n");
 	RTC_Time();
-	User_Data.Wake_time=20;
+	
 
-	MCP3421_Init();
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -171,62 +175,7 @@ int main(void)
 		{
 //			LPUART1Flag = 0;//清除计数
 //			LPUART1Cnt = 0;//清除接收结束标志位
-			if(strstr((char *)LPUART1_Data,"+QMTRECV: 0,0")&&strstr((char *)LPUART1_Data,(char *)User_Data.imei)){
-				printf("Sever_data=%s\r\n",LPUART1_Data);
-				if(strstr((char *)LPUART1_Data,"A5")){
-					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
-					LPUART1_RX_STA = 0;
-					RTC_Time();
-//					
-//					PWR12V_ON
-//					HAL_Delay(10);
-					read_SW();
-					memset(main_buff1,0,sizeof(main_buff1));
-					main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
-					User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
-					GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
-					MQTT_PublishQs0(main_buff1,main_len);	
-//					PWR12V_OFF
-//					HAL_Delay(10);
-				}
-				else if(strstr((char *)LPUART1_Data,"A1")&&strstr((char *)LPUART1_Data,(char *)User_Data.imei)){
-				  get_A1_data((char *)LPUART1_Data);
-					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
-					LPUART1_RX_STA = 0;
-					Control(&User_Data);
-					memset(main_buff1,0,sizeof(main_buff1));
-					main_len=sprintf(main_buff1,"B1,%s,OK",User_Data.imei);
-					MQTT_PublishQs0(main_buff1,main_len);
-				}
-				else if(strstr((char *)LPUART1_Data,"A2")&&strstr((char *)LPUART1_Data,(char *)User_Data.imei)){
-					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
-					LPUART1_RX_STA = 0;
-					memset(main_buff1,0,sizeof(main_buff1));
-					main_len=sprintf(main_buff1,"B2,%s,OK",User_Data.imei);
-					MQTT_PublishQs0(main_buff1,main_len);
-					enter_stop_rtc_mode(User_Data.Wake_time);
-				}
-				else if(strstr((char *)LPUART1_Data,"A3")&&strstr((char *)LPUART1_Data,(char *)User_Data.imei)){
-					get_A3_data((char *)LPUART1_Data);
-					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
-					LPUART1_RX_STA = 0;
-					memset(main_buff1,0,sizeof(main_buff1));
-					main_len=sprintf(main_buff1,"B3,%s,OK",User_Data.imei);
-					MQTT_PublishQs0(main_buff1,main_len);
-				
-				}
-				else if(strstr((char *)LPUART1_Data,"A4")&&strstr((char *)LPUART1_Data,(char *)User_Data.imei)){
-					get_A4_data((char *)LPUART1_Data);
-					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
-					LPUART1_RX_STA = 0;
-					memset(main_buff1,0,sizeof(main_buff1));
-					main_len=sprintf(main_buff1,"B4,%s,OK",User_Data.imei);
-					MQTT_PublishQs0(main_buff1,main_len);
-
-				}
-				else;
-					
-			}	
+			U3PassiveEvent(LPUART1_Data,LPUART1_RX_BUFFSIZE);
 			memset(LPUART1_Data,0,sizeof(LPUART1_Data));
 			LPUART1_RX_STA = 0;
 		}
