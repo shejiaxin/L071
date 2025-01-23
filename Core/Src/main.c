@@ -57,6 +57,16 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
+
+void GetSystemClocks(void) {
+  // 获取系统时钟配置
+  uint32_t SYSCLK_Frequency = HAL_RCC_GetSysClockFreq();/*!< returns SYSCLK clock frequency expressed in Hz */
+  uint32_t HCLK_Frequency= HAL_RCC_GetHCLKFreq();    /*!< returns HCLK clock frequency expressed in Hz */
+  uint32_t PCLK1_Frequency= HAL_RCC_GetPCLK1Freq();   /*!< returns PCLK1 clock frequency expressed in Hz */
+  uint32_t PCLK2_Frequency= HAL_RCC_GetSysClockFreq(); 
+ // 这里设置一个断点，用于调试时查看频率
+ //    __NOP(); // 这是一个空操作，仅用于设置断点
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -89,28 +99,28 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 	//注意  MX_DMA_Init  要放在 串口初始化前面
   /* USER CODE END SysInit */
-	
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-	MX_DMA_Init();
+  MX_DMA_Init();
   MX_ADC_Init();
- 
   MX_TIM2_Init();
   MX_RTC_Init();
-  MX_I2C2_Init();
+
   MX_LPUART1_UART_Init();
-	MX_USART1_UART_Init();
+  MX_USART1_UART_Init();	
   MX_USART2_UART_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 	HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)res, 1);    // 使能串口接收中断
 	HAL_TIM_Base_Start_IT(&htim7); // 开启定时器中断
+	
+	//GetSystemClocks();
 	IO1_OFF
 
-	PWR18V_OFF
+	PWR18V_ON
 	PWR12V_ON
-	RELAY1_ON_OFF_ON
-	RELAY1_ON
+
 	Battery_EN_ON
 	Adc_start();
 	
@@ -120,6 +130,7 @@ int main(void)
 	mcu_eeprom_read(31,(uint8_t *)&User_Data.motor_90_val_4t,4);
 	mcu_eeprom_read(36,(uint8_t *)&User_Data.motor_180_val,4);
 	mcu_eeprom_read(0,(uint8_t *)&Connect_State,1);	
+
 	if(Connect_State == 1)
 	{
 		LoRa_PowerON;
@@ -130,15 +141,15 @@ int main(void)
 		mcu_eeprom_read(5,(uint8_t *)&LoRaNet,sizeof(LoRaNet));
 		LoRa_Init();
 	}	
-	printf("%d\r\n",sizeof(LoRaNet));
-	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
+//	printf("%d\r\n",sizeof(LoRaNet));
+
 	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
 	
-	printf("hello\r\n");
+	printf("初始化完成\r\n");
 	RTC_Time();
 	User_Data.Wake_time=20;
-		
-	
+
+	MCP3421_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,7 +157,7 @@ int main(void)
   while (1)
   {
 		Get_Adc_Value();
-		//Motor_Control();
+		Motor_Control();
 		read_SW();
 		if(Uart1Flag == 1)  //接收完成标志
 		{
@@ -166,18 +177,23 @@ int main(void)
 					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
 					LPUART1_RX_STA = 0;
 					RTC_Time();
+//					
+//					PWR12V_ON
+//					HAL_Delay(10);
 					read_SW();
 					memset(main_buff1,0,sizeof(main_buff1));
-					main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.Switch_Type,
-					User_Data.Double_Type,User_Data.Butterfly_Type,User_Data.motor_Type,User_Data.Wake_time,
+					main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+					User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
 					GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
 					MQTT_PublishQs0(main_buff1,main_len);	
+//					PWR12V_OFF
+//					HAL_Delay(10);
 				}
 				else if(strstr((char *)LPUART1_Data,"A1")&&strstr((char *)LPUART1_Data,(char *)User_Data.imei)){
 				  get_A1_data((char *)LPUART1_Data);
 					memset(LPUART1_Data,0,sizeof(LPUART1_Data));
 					LPUART1_RX_STA = 0;
-					Control(User_Data);
+					Control(&User_Data);
 					memset(main_buff1,0,sizeof(main_buff1));
 					main_len=sprintf(main_buff1,"B1,%s,OK",User_Data.imei);
 					MQTT_PublishQs0(main_buff1,main_len);
@@ -248,12 +264,15 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE
+                              |RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLLMUL_3;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLLMUL_8;
   RCC_OscInitStruct.PLL.PLLDIV = RCC_PLLDIV_2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -268,7 +287,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }

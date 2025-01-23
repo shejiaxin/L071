@@ -28,22 +28,29 @@
 #define IO1_ON   HAL_GPIO_WritePin(IO_OUT1_GPIO_Port, IO_OUT1_Pin, GPIO_PIN_RESET);
 #define IO1_OFF  HAL_GPIO_WritePin(IO_OUT1_GPIO_Port, IO_OUT1_Pin, GPIO_PIN_SET);
 
-#define RELAY1_ON   HAL_GPIO_WritePin(RELAY1_GPIO_Port, RELAY1_Pin, GPIO_PIN_SET);
-#define RELAY1_OFF  HAL_GPIO_WritePin(RELAY1_GPIO_Port, RELAY1_Pin, GPIO_PIN_RESET);
-
-
-#define RELAY1_ON_OFF_ON   HAL_GPIO_WritePin(RELAY1_ON_OFF_GPIO_Port, RELAY1_ON_OFF_Pin, GPIO_PIN_SET);
-#define RELAY1_ON_OFF_OFF  HAL_GPIO_WritePin(RELAY1_ON_OFF_GPIO_Port, RELAY1_ON_OFF_Pin, GPIO_PIN_RESET);
 
 
 #define IO1_IN   HAL_GPIO_ReadPin(IO_IN1_GPIO_Port, IO_IN1_Pin)
 #define IO2_IN   HAL_GPIO_ReadPin(IO_IN2_GPIO_Port, IO_IN2_Pin)
-
+#define IO3_IN   HAL_GPIO_ReadPin(IO_in3_GPIO_Port, IO_in3_Pin)
+#define IO4_IN   HAL_GPIO_ReadPin(IO_in4_GPIO_Port, IO_in4_Pin)
 
 #define Motor_ON   HAL_GPIO_WritePin(Motor_IN1_GPIO_Port, Motor_IN1_Pin, GPIO_PIN_SET); HAL_GPIO_WritePin(Motor_IN2_GPIO_Port, Motor_IN2_Pin, GPIO_PIN_RESET);  //正转
 #define Motor_OFF  HAL_GPIO_WritePin(Motor_IN1_GPIO_Port, Motor_IN1_Pin, GPIO_PIN_RESET);HAL_GPIO_WritePin(Motor_IN2_GPIO_Port, Motor_IN2_Pin, GPIO_PIN_SET); //反转
 #define Motor_sleep  HAL_GPIO_WritePin(Motor_IN1_GPIO_Port, Motor_IN1_Pin, GPIO_PIN_RESET); HAL_GPIO_WritePin(Motor_IN2_GPIO_Port, Motor_IN2_Pin, GPIO_PIN_RESET);  //正转
 #define Motor_brake  HAL_GPIO_WritePin(Motor_IN1_GPIO_Port, Motor_IN1_Pin, GPIO_PIN_SET);HAL_GPIO_WritePin(Motor_IN2_GPIO_Port, Motor_IN2_Pin, GPIO_PIN_SET); //反转
+
+
+#define FM1_Motor_ON   HAL_GPIO_WritePin(FM1_IN1_GPIO_Port, FM1_IN1_Pin, GPIO_PIN_SET); HAL_GPIO_WritePin(FM1_IN2_GPIO_Port, FM1_IN2_Pin, GPIO_PIN_RESET);  //正转
+#define FM1_Motor_OFF  HAL_GPIO_WritePin(FM1_IN1_GPIO_Port, FM1_IN1_Pin, GPIO_PIN_RESET);HAL_GPIO_WritePin(FM1_IN2_GPIO_Port, FM1_IN2_Pin, GPIO_PIN_SET); //反转
+#define FM1_Motor_sleep  HAL_GPIO_WritePin(FM1_IN1_GPIO_Port, FM1_IN1_Pin, GPIO_PIN_RESET); HAL_GPIO_WritePin(FM1_IN2_GPIO_Port, FM1_IN2_Pin, GPIO_PIN_RESET);  //正转
+#define FM1_Motor_brake  HAL_GPIO_WritePin(FM1_IN1_GPIO_Port, FM1_IN1_Pin, GPIO_PIN_SET);HAL_GPIO_WritePin(FM1_IN2_GPIO_Port, FM1_IN2_Pin, GPIO_PIN_SET); //反转
+
+#define FM2_Motor_ON   HAL_GPIO_WritePin(FM2_IN1_GPIO_Port, FM2_IN1_Pin, GPIO_PIN_SET); HAL_GPIO_WritePin(FM2_IN2_GPIO_Port, FM2_IN2_Pin, GPIO_PIN_RESET);  //正转
+#define FM2_Motor_OFF  HAL_GPIO_WritePin(FM2_IN1_GPIO_Port, FM2_IN1_Pin, GPIO_PIN_RESET);HAL_GPIO_WritePin(FM2_IN2_GPIO_Port, FM2_IN2_Pin, GPIO_PIN_SET); //反转
+#define FM2_Motor_sleep  HAL_GPIO_WritePin(FM2_IN1_GPIO_Port, FM2_IN1_Pin, GPIO_PIN_RESET); HAL_GPIO_WritePin(FM2_IN2_GPIO_Port, FM2_IN2_Pin, GPIO_PIN_RESET);  //正转
+#define FM2_Motor_brake  HAL_GPIO_WritePin(FM2_IN1_GPIO_Port, FM2_IN1_Pin, GPIO_PIN_SET);HAL_GPIO_WritePin(FM2_IN2_GPIO_Port, FM2_IN2_Pin, GPIO_PIN_SET); //反转
+
 
 
 #define Set_Pwm1(x) __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,x);
@@ -58,9 +65,11 @@
 #define PWR12V_ON   HAL_GPIO_WritePin(ON_OFF_12V_GPIO_Port, ON_OFF_12V_Pin, GPIO_PIN_SET);
 #define PWR12V_OFF  HAL_GPIO_WritePin(ON_OFF_12V_GPIO_Port, ON_OFF_12V_Pin, GPIO_PIN_RESET);
 
-//#define FM_ON_OFF1_ON   HAL_GPIO_WritePin(FM_ON_OFF1_GPIO_Port, FM_ON_OFF1_Pin, GPIO_PIN_SET);
-//#define FM_ON_OFF1_OFF  HAL_GPIO_WritePin(FM_ON_OFF1_GPIO_Port, FM_ON_OFF1_Pin, GPIO_PIN_RESET);
-#define KEY_PB9_IN   HAL_GPIO_ReadPin(KEY_PB9_GPIO_Port, KEY_PB9_Pin)
+#define RELAY_PW_ON  HAL_GPIO_WritePin(RELAY_PW_ON_OFF_GPIO_Port, RELAY_PW_ON_OFF_Pin, GPIO_PIN_SET);
+#define RELAY_PW_OFF  HAL_GPIO_WritePin(RELAY_PW_ON_OFF_GPIO_Port, RELAY_PW_ON_OFF_Pin, GPIO_PIN_RESET);
+
+
+#define KEY_PB9_IN   HAL_GPIO_ReadPin(Key_S1_GPIO_Port, Key_S1_Pin)
 
 
 #ifdef __cplusplus

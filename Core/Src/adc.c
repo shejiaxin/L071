@@ -63,8 +63,7 @@ void MX_ADC_Init(void)
   {
     Error_Handler();
   }
-
-	if (HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED) != HAL_OK)
+  	if (HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED) != HAL_OK)
   {
     Error_Handler();
   }
@@ -151,9 +150,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
     __HAL_LINKDMA(adcHandle,DMA_Handle,hdma_adc);
 
-//    /* ADC1 interrupt Init */
-//    HAL_NVIC_SetPriority(ADC1_COMP_IRQn, 0, 0);
-//    HAL_NVIC_EnableIRQ(ADC1_COMP_IRQn);
+    /* ADC1 interrupt Init */
+ //   HAL_NVIC_SetPriority(ADC1_COMP_IRQn, 0, 0);
+ //   HAL_NVIC_EnableIRQ(ADC1_COMP_IRQn);
   /* USER CODE BEGIN ADC1_MspInit 1 */
 	
   /* USER CODE END ADC1_MspInit 1 */

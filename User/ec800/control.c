@@ -87,8 +87,29 @@ int calculateMotorAngle_4t(int adcValue, struct motor_Data* userData) {
      return ((adcValue - userData->motor_90_val_4t) / adcIncrement) * 10;
 
 }
+
+#define MIN_READING 423  // The reading corresponding to 0 degrees
+#define MAX_READING 1998 // The reading corresponding to 90 degrees
+
+int calculateRange(uint32_t reading)
+{
+    // Check if the reading is in range
+    if (reading < MIN_READING || reading > MAX_READING)
+    {
+        return -1;  // Return -1 to indicate an error
+    }
+
+    // Map the reading to the angle
+    float angle = (float)(reading - MIN_READING + (MAX_READING - MIN_READING)/100) / (MAX_READING - MIN_READING) * 100.0;
+
+    // Calculate the range
+    int rounded_angle = round(angle / 10.0) * 10;
+
+    return rounded_angle;
+}
 void read_SW(void)
 {		
+		PWR12V_ON
 		struct motor_Data userData = {
         .motor_0_val = User_Data.motor_0_val,
         .motor_90_val_2t = User_Data.motor_90_val_2t,
@@ -97,140 +118,157 @@ void read_SW(void)
     };
 		User_Data.adc = calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
 		if(IO1_IN==1&&IO2_IN==0){
-			User_Data.Switch_Type=1;
+			User_Data.RW_Switch_Type1=1;
 		}
 	  if(IO1_IN==0&&IO2_IN==1){
-			User_Data.Switch_Type=0;
+			User_Data.RW_Switch_Type1=0;
 		}
-
-		User_Data.Butterfly_Type=(Get_Valve_Voltage(1)-400)/16+1;
-		User_Data.Butterfly_Type=round(User_Data.Butterfly_Type/10)*10;
+		if(IO3_IN==1&&IO4_IN==0){
+			User_Data.RW_Switch_Type1=1;
+		}
+	  if(IO3_IN==0&&IO4_IN==1){
+			User_Data.RW_Switch_Type2=0;
+		}
+		User_Data.RW_Butterfly_Type=calculateRange(READ_MCP3421());
+//		User_Data.RW_Butterfly_Type=round(User_Data.RW_Butterfly_Type/10)*10;
 		
-		User_Data.Double_Type=Get_Valve_Voltage(0);
+//		User_Data.Double_Type=Get_Valve_Voltage(3);
 		
 		if(ADC_Values[0] <= User_Data.motor_90_val_2t && ADC_Values[0] >= User_Data.motor_0_val)
-			User_Data.motor_Type = calculateMotorAngle_2t(ADC_Values[0], &userData);
+			User_Data.RW_motor_Type = calculateMotorAngle_2t(ADC_Values[0], &userData);
 		if(ADC_Values[3] >= User_Data.motor_90_val_4t && ADC_Values[3] <= User_Data.motor_180_val)
-			User_Data.motor_Type = calculateMotorAngle_4t(ADC_Values[3], &userData)+90;
+			User_Data.RW_motor_Type = calculateMotorAngle_4t(ADC_Values[3], &userData)+90;
 
-//		if(ADC_Values[0] >= User_Data.motor_0_val && ADC_Values[0] < (User_Data.motor_0_val )){
-//			User_Data.motor_Type =0;
-//		}
-//		else if(ADC_Values[0] >= 1665 && ADC_Values[0] < 1761){
-//			User_Data.motor_Type =10;
-//		}
-//		else if(ADC_Values[0] >= 1761 && ADC_Values[0] < 1858){
-//					User_Data.motor_Type =20;
-//		}	
-//		else if(ADC_Values[0] >= 1858 && ADC_Values[0] < 1954){
-//					User_Data.motor_Type =30;
-//		}	
-//		else if(ADC_Values[0] >= 1954 && ADC_Values[0] < 2051){
-//					User_Data.motor_Type =40;
-//		}	
-//		else if(ADC_Values[0] >= 2051 && ADC_Values[0] < 2147){
-//					User_Data.motor_Type =50;
-//		}	
-//		else if(ADC_Values[0] >= 2147 && ADC_Values[0] < 2340){
-//					User_Data.motor_Type =60;
-//		}	
-//		else if(ADC_Values[0] >= 2340 && ADC_Values[0] < 2437){
-//					User_Data.motor_Type =70;
-//		}	
-//		else if(ADC_Values[0] >= 2437 && ADC_Values[0] < 2533){
-//					User_Data.motor_Type =80;
-//		}	
-//		else if(ADC_Values[0] >= 2533 && ADC_Values[0] < 2600){
-//					User_Data.motor_Type =90;
-//		}	
-//		
-//		if(ADC_Values[3] >= 1665 && ADC_Values[0] < 1761){
-//			User_Data.motor_Type =0;
-//		}
-//		else if(ADC_Values[3] >= 1665 && ADC_Values[0] < 1761){
-//			User_Data.motor_Type =10;
-//		}
-//		else if(ADC_Values[3] >= 1761 && ADC_Values[0] < 1858){
-//					User_Data.motor_Type =20;
-//		}	
-//		else if(ADC_Values[3] >= 1858 && ADC_Values[0] < 1954){
-//					User_Data.motor_Type =30;
-//		}	
-//		else if(ADC_Values[3] >= 1954 && ADC_Values[0] < 2051){
-//					User_Data.motor_Type =40;
-//		}	
-//		else if(ADC_Values[3] >= 2051 && ADC_Values[0] < 2147){
-//					User_Data.motor_Type =50;
-//		}	
-//		else if(ADC_Values[3] >= 2147 && ADC_Values[0] < 2340){
-//					User_Data.motor_Type =60;
-//		}	
-//		else if(ADC_Values[3] >= 2340 && ADC_Values[0] < 2437){
-//					User_Data.motor_Type =70;
-//		}	
-//		else if(ADC_Values[3] >= 2437 && ADC_Values[0] < 2533){
-//					User_Data.motor_Type =80;
-//		}	
-//		else if(ADC_Values[3] >= 2533 && ADC_Values[0] < 2600){
-//					User_Data.motor_Type =90;
-//		}			
+
 		//(Get_Valve_Voltage(1)-400)/16+1;
 		//User_Data.Butterfly_Type2=round(User_Data.Butterfly_Type2/10)*10;
 }
 
 
-void Control(DATA data)
+void Control(DATA *data)
 {
-	PWR18V_OFF
-	PWR12V_ON
-	RELAY1_ON_OFF_ON
-	
-	//HAL_Delay(1000);
-	if(data.Switch_Type){	
-		RELAY1_ON		
-	}
-	else{
-		RELAY1_OFF	
-	}
-	if(data.Double_Type){
+	if(data->Switch_Type1 != data->RW_Switch_Type1   		||
+			data->Switch_Type2 != data->RW_Switch_Type2 		||
+			data->Double_Type != data->RW_Double_Type 			||		
+			data->Butterfly_Type != data->RW_Butterfly_Type ||
+			data->motor_Type != data->RW_motor_Type 	
+	)
+	data->control_state =1;
+	if(data->Switch_Type1 == data->RW_Switch_Type1   		&&
+			data->Switch_Type2 == data->RW_Switch_Type2 		&&
+			data->Double_Type == data->RW_Double_Type 			&&		
+			data->Butterfly_Type == data->RW_Butterfly_Type &&
+			data->motor_Type == data->RW_motor_Type 	
+	)
+	data->control_state =0;
 
-	}
-	else{		
-	
-	}
-//	if(data.motor_Type){
-//		User_Data.control_state =1;
-//		User_Data.motor_Type = 1;
-//	}
-//	else{		
-//		User_Data.control_state =1;
-//		User_Data.motor_Type = 0;
-//	}
-	TIM2->CCR2 = data.Butterfly_Type*8+200;
-	//TIM2->CCR1 = data.Butterfly_Type2*8+200;
 
 }
+#define TIMER_MAX 1000 // Maximum value for the timer
+#define MIN_ANGLE 0.0  // Minimum angle in degrees
+#define MAX_ANGLE 100.0 // Maximum angle in degrees
+#define MIN_CURRENT 4.0  // Minimum current in mA
+#define MAX_CURRENT 20.0  // Maximum current in mA
+#define MIN_PWM 200 // Minimum PWM value
+#define MAX_PWM 1000 // Maximum PWM value
 
+int calculateCCR(float angle)
+{
+		if(angle <= 0){
+		  return 200;
+		}
+		if(angle >= 100){
+		  return 1000;
+		}
+    // Map the angle to the current
+    float current = (angle - MIN_ANGLE) / (MAX_ANGLE - MIN_ANGLE) * (MAX_CURRENT - MIN_CURRENT) + MIN_CURRENT;
+
+    // Map the current to the PWM
+    int CCR = (int)((current - MIN_CURRENT) / (MAX_CURRENT - MIN_CURRENT) * (MAX_PWM - MIN_PWM) + MIN_PWM);
+
+    return CCR;
+}
 void Motor_Control(void)
 {
-	if(User_Data.control_state ==1){
-		if(User_Data.motor_Type >= 1){
-			Motor_ON
-			if(ADC_Values[0] >= 3290 ){
-				Motor_brake
-				User_Data.control_state =0;
+	if(User_Data.control_state == 1){
+		
+		User_Data.control_report_state = 1;
+		PWR18V_ON
+		PWR12V_ON
+		RELAY_PW_ON
+		HAL_Delay(10);
+		read_SW();
+		if(User_Data.Switch_Type1 != User_Data.RW_Switch_Type1){
+			if(User_Data.Switch_Type1){	
+				FM1_Motor_ON
+			}
+			else{
+				FM1_Motor_OFF
 			}
 		}
-		if(User_Data.motor_Type == 0){
-			Motor_OFF
-			if(ADC_Values[0] <= 2475){
-				Motor_brake
-				User_Data.control_state =0;
+		if(User_Data.Switch_Type2 != User_Data.RW_Switch_Type2){
+			if(User_Data.Switch_Type2){	
+				FM2_Motor_ON
+			}
+			else{
+				FM2_Motor_OFF
 			}
 		}
+		if(User_Data.Double_Type != User_Data.RW_Double_Type){
+			if(User_Data.Double_Type){	
+				
+			}
+			else{
+				
+			}
+		}
+
+		TIM2->CCR2 = calculateCCR(User_Data.Butterfly_Type);
+		
+		/*服务器下发电机状态不等于读取的电机角度，并且范围在0-180 度时 */
+		if(User_Data.motor_Type != User_Data.RW_motor_Type && User_Data.motor_Type >=0  && User_Data.motor_Type <=180){
+			if(User_Data.motor_Type < User_Data.RW_motor_Type){
+					Motor_ON				
+			}
+			else if(User_Data.motor_Type > User_Data.RW_motor_Type){
+					Motor_OFF				
+			}
+			else{
+					Motor_sleep
+			}		
+		}
+		else if(User_Data.motor_Type == User_Data.RW_motor_Type ){
+					Motor_brake
+		}
+		else ;
+		
+		Control(&User_Data);
 	}
 	else{
+
 		Motor_sleep	
+		HAL_Delay(10);
+		PWR18V_OFF
+//		PWR12V_OFF
+		RELAY_PW_OFF
+		if(User_Data.control_report_state == 1){
+			User_Data.control_report_state = 0;
+			if(Connect_State == 1)
+			{	
+				memset(main_buff1,0,sizeof(main_buff1));
+				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
+				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+				MQTT_PublishQs0(main_buff1,main_len);	
+			}
+			if(Connect_State == 2){
+				memset(main_buff1,0,sizeof(main_buff1));
+				main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
+				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
+				HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
+			}	
+		}
 	}
 
 }
@@ -253,7 +291,7 @@ void Motor_BD(void)
 			
 			if(strstr((char *)Uart1_Data,"BD"))//if(Uart1_Data[0] == 0xBD && KEY_PB9_IN == RESET)
 			{
-
+				PWR12V_ON
 				while(1){
 					switch(BD_State){
 						case 0:
@@ -334,11 +372,16 @@ void Motor_BD(void)
 					
 					}					
 					Get_Adc_Value();
+					if(User_Data.SysTick_10S %1000 == 0){
+							HAL_GPIO_TogglePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin);
+					}
 					if(BD_State >= 8){
 							BD_State = 0;
 							Motor_BD_State = 1;
 							User_Data.SysTick_10S = 0;
 							User_Data.SysTick_10S_start = 0;
+//							PWR12V_OFF
+							HAL_GPIO_WritePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin,GPIO_PIN_RESET);
 							mcu_eeprom_write(20,(uint8_t *)&Motor_BD_State,1);
 							mcu_eeprom_write(21,(uint8_t *)&User_Data.motor_0_val,4);
 							mcu_eeprom_write(26,(uint8_t *)&User_Data.motor_90_val_2t,4);

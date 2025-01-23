@@ -235,7 +235,7 @@ void TIM7_IRQHandler(void)
 		__HAL_TIM_DISABLE(&htim7);  //¹Ø±ÕTIM7 
 	}	   
   /* USER CODE END TIM7_IRQn 0 */
-  //HAL_TIM_IRQHandler(&htim7);
+//HAL_TIM_IRQHandler(&htim7);
   /* USER CODE BEGIN TIM7_IRQn 1 */
 
   /* USER CODE END TIM7_IRQn 1 */
@@ -247,11 +247,11 @@ void TIM7_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-	if (__HAL_UART_GET_FLAG(&hlpuart1, UART_FLAG_ORE) != RESET)        /* UART½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï */
+	if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_ORE) != RESET)        /* UART½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï */
 	{
-			__HAL_UART_CLEAR_OREFLAG(&hlpuart1);                           /* Çå³ý½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï±êÖ¾ */
-			(void)hlpuart1.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
-			(void)hlpuart1.Instance->TDR;
+			__HAL_UART_CLEAR_OREFLAG(&huart1);                           /* Çå³ý½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï±êÖ¾ */
+			(void)huart1.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
+			(void)huart1.Instance->TDR;
 	}
   if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_FE) != RESET) {
       __HAL_UART_CLEAR_FEFLAG(&huart1); //Çå³ýFEÖ¡´íÎó±êÖ¾
@@ -282,26 +282,26 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-	if (__HAL_UART_GET_FLAG(&hlpuart1, UART_FLAG_ORE) != RESET)        /* UART½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï */
+	if (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_ORE) != RESET)        /* UART½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï */
 	{
-			__HAL_UART_CLEAR_OREFLAG(&hlpuart1);                           /* Çå³ý½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï±êÖ¾ */
-			(void)hlpuart1.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
-			(void)hlpuart1.Instance->TDR;
+			__HAL_UART_CLEAR_OREFLAG(&huart2);                           /* Çå³ý½ÓÊÕ¹ýÔØ´íÎóÖÐ¶Ï±êÖ¾ */
+			(void)huart2.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
+			(void)huart2.Instance->TDR;
 	}
-  if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_FE) != RESET) {
-      __HAL_UART_CLEAR_FEFLAG(&huart1); //Çå³ýFEÖ¡´íÎó±êÖ¾
-			(void)huart1.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
-			(void)huart1.Instance->TDR;
+  if(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_FE) != RESET) {
+      __HAL_UART_CLEAR_FEFLAG(&huart2); //Çå³ýFEÖ¡´íÎó±êÖ¾
+			(void)huart2.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
+			(void)huart2.Instance->TDR;
   } 
-	if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_PE) != RESET) {
-      __HAL_UART_CLEAR_PEFLAG(&huart1); //Çå³ýPEÆæÅ¼Ð£Ñé´íÎó±êÖ¾ 
-			(void)huart1.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
-			(void)huart1.Instance->TDR;
+	if(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_PE) != RESET) {
+      __HAL_UART_CLEAR_PEFLAG(&huart2); //Çå³ýPEÆæÅ¼Ð£Ñé´íÎó±êÖ¾ 
+			(void)huart2.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
+			(void)huart2.Instance->TDR;
   } 
-	if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_NE) != RESET) {
-      __HAL_UART_CLEAR_NEFLAG(&huart1); //Çå³ýNEÔëÉù´íÎó±êÖ¾    
-			(void)huart1.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
-			(void)huart1.Instance->TDR;
+	if(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_NE) != RESET) {
+      __HAL_UART_CLEAR_NEFLAG(&huart2); //Çå³ýNEÔëÉù´íÎó±êÖ¾    
+			(void)huart2.Instance->RDR;                                   /* ÏÈ¶ÁSR¼Ä´æÆ÷£¬ÔÙ¶ÁDR¼Ä´æÆ÷ */
+			(void)huart2.Instance->TDR;
   }
 	USART2_DMAHandler();
   /* USER CODE END USART2_IRQn 0 */

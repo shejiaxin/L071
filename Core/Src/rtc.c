@@ -143,7 +143,7 @@ void RTC_Time(void)
 		HAL_RTC_GetDate(&hrtc, &GetData, RTC_FORMAT_BIN);
 
 		/* Display date Format : yy/mm/dd */
-		printf("%02d/%02d/%02d\r\n",2000 + GetData.Year, GetData.Month, GetData.Date);
+		printf("Ê±¼ä--%02d/%02d/%02d\r\n",2000 + GetData.Year, GetData.Month, GetData.Date);
 		/* Display time Format : hh:mm:ss */
 		printf("%02d:%02d:%02d\r\n",GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
 }

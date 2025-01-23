@@ -172,13 +172,20 @@ void EC20_Init(void)
 		HAL_Delay(100);
 		RTC_Time();
 		Get_Adc_Value();
+		
+//		PWR12V_ON
+//		HAL_Delay(10);
 		read_SW();
+		
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.Switch_Type,
-		User_Data.Double_Type,User_Data.Butterfly_Type,User_Data.motor_Type,User_Data.Wake_time,
+		main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
 		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
 		MQTT_PublishQs0(main_buff1,main_len);	
   	UART_Clear();
+		
+//		PWR12V_OFF
+//		HAL_Delay(10);
 }
 
 
@@ -223,23 +230,23 @@ void get_A1_data(char *data)
 			{
 				case 3:
 					userdata=atoi(token);
-					if(userdata!=User_Data.Switch_Type)
-						User_Data.Switch_Type=userdata;
+					User_Data.Switch_Type1=userdata;
 					break;
 				case 4:
 					userdata=atoi(token);
-					if(userdata!=User_Data.Double_Type)
-						User_Data.Double_Type=userdata;
+					User_Data.Switch_Type2=userdata;
 					break;
 				case 5:
-					userdata=atoi(token);
-					if(userdata!=User_Data.Butterfly_Type)
-						User_Data.Butterfly_Type=userdata;
+					userdata=atoi(token);			
+					User_Data.Double_Type=userdata;
 					break;
 				case 6:
-					userdata=atoi(token);
-					if(userdata!=User_Data.motor_Type)
-						User_Data.motor_Type=userdata;
+					userdata=atoi(token);					
+					User_Data.Butterfly_Type=userdata;
+					break;
+				case 7:
+					userdata=atoi(token);				
+					User_Data.motor_Type=userdata;
 					break;
 
 				default:

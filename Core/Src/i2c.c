@@ -38,7 +38,7 @@ void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x40000A0B;
+  hi2c2.Init.Timing = 0x00707CBB;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -75,7 +75,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
   if(i2cHandle->Instance==I2C2)
   {
   /* USER CODE BEGIN I2C2_MspInit 0 */
-
+		__HAL_RCC_I2C2_CLK_ENABLE();
   /* USER CODE END I2C2_MspInit 0 */
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
@@ -93,6 +93,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     /* I2C2 clock enable */
     __HAL_RCC_I2C2_CLK_ENABLE();
   /* USER CODE BEGIN I2C2_MspInit 1 */
+
 
   /* USER CODE END I2C2_MspInit 1 */
   }

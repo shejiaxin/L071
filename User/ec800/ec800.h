@@ -21,15 +21,34 @@ typedef struct
 
 typedef struct
 {
-	uint8_t Switch_Type;			//开关型阀门状态
+	///////////服务器下发的控制指令////////////////
+	uint8_t Switch_Type1;			//开关型阀门状态
 
+	uint8_t Switch_Type2;			//开关型阀门状态
+	
 	uint8_t	Double_Type;			//双通阀门状态
 
 	uint8_t Butterfly_Type;	//蝶形阀状态
 
 	uint8_t motor_Type;     //电机阀门状态
 	
+	/*-------------------------------------*/
+	
+	///////////实时读取的阀门状态////////////////
+	uint8_t RW_Switch_Type1;			//开关型阀门状态
+	
+	uint8_t RW_Switch_Type2;			//开关型阀门状态
+	
+	uint8_t	RW_Double_Type;			//双通阀门状态
+
+	uint8_t RW_Butterfly_Type;	//蝶形阀状态
+
+	uint8_t RW_motor_Type;     //电机阀门状态	
+	/*-------------------------------------*/
+	
 	uint8_t control_state; //有无控制指令下发，有下发为1，执行完为0
+	
+	uint8_t control_report_state; //控制完成上报
 	
 	uint32_t SysTick_10S;
 	uint8_t SysTick_10S_start;

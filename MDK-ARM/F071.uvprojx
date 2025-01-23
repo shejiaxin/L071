@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32L071xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32L0xx_HAL_Driver/Inc;../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L0xx/Include;../Drivers/CMSIS/Include;..\User\lora;..\MDK-ARM;..\User\lora;..\User\ec800;..\User\user_iic;..\User\stop;..\User\modbus_crc;..\User\user_usart</IncludePath>
+              <IncludePath>../Core/Inc;    ../Drivers/STM32L0xx_HAL_Driver/Inc;    ../Drivers/STM32L0xx_HAL_Driver/Inc/Legacy;    ../Drivers/CMSIS/Device/ST/STM32L0xx/Include;    ../Drivers/CMSIS/Include;    ..\User\lora;    ..\MDK-ARM;    ..\User\lora;    ..\User\ec800;    ..\User\user_iic;    ..\User\stop;    ..\User\modbus_crc;    ..\User\user_usart</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

@@ -52,11 +52,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 	 }
 	 if (huart->Instance == USART1)
    {
-		 printf("LPUART1-error\r\n");
+		 printf("USART1-error\r\n");
 	 }
 	 if (huart->Instance == USART2)
    {
-		 printf("LPUART1-error\r\n");
+		 printf("USART2-error\r\n");
 	 }
 	 
 	 

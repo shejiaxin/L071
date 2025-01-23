@@ -74,14 +74,18 @@ void LoRa_Init(void)
 	LoRa_MODE0;	
 	HAL_Delay(200);
 	RTC_Time();
+	
+//	PWR12V_ON
+//	HAL_Delay(10);
 	read_SW();
 	memset(main_buff1,0,sizeof(main_buff1));
-	main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.Switch_Type,
-		User_Data.Double_Type,User_Data.Butterfly_Type,User_Data.motor_Type,User_Data.Wake_time,
+	main_len=sprintf(main_buff1,"B5,%d,,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
 		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
 	HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 	
-	
+//	PWR12V_OFF
+//	HAL_Delay(10);
 }
 /*-------------------------------------------------*/
 /*函数名：LoRa设置工作参数                         */
@@ -248,16 +252,22 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 	User_Data.lora_rssi = data[datalen-1];
 	if(strstr((char *)data,"A5")&& (LoRaNet.LoRa_AddrL   == User_Data.lora_id)){
 		RTC_Time();
+		
+//		PWR12V_ON
+//		HAL_Delay(10);
 		read_SW();
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.Switch_Type,
-		User_Data.Double_Type,User_Data.Butterfly_Type,User_Data.motor_Type,User_Data.Wake_time,
+		main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
 		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
+		
+//		PWR12V_OFF
+//		HAL_Delay(10);
 	}
 	else if(strstr((char *)data,"A1")&&(LoRaNet.LoRa_AddrL  == User_Data.lora_id)){
 		lora_get_A1_data((char *)data);
-		Control(User_Data);
+		Control(&User_Data);
 		memset(main_buff1,0,sizeof(main_buff1));
 		main_len=sprintf(main_buff1,"B1,%d,OK,%d",LoRaNet.LoRa_AddrL,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
@@ -308,23 +318,23 @@ static void lora_get_A1_data(char *data)
 			{
 				case 2:
 					userdata=atoi(token);
-					if(userdata!=User_Data.Switch_Type)
-						User_Data.Switch_Type=userdata;
+					User_Data.Switch_Type1=userdata;
 					break;
 				case 3:
-					userdata=atoi(token);
-					if(userdata!=User_Data.Double_Type)
-						User_Data.Double_Type=userdata;
-					break;
+					userdata=atoi(token);				
+					User_Data.Switch_Type1=userdata;
+					break;	
 				case 4:
-					userdata=atoi(token);
-					if(userdata!=User_Data.Butterfly_Type)
-						User_Data.Butterfly_Type=userdata;
+					userdata=atoi(token);			
+					User_Data.Double_Type=userdata;
 					break;
 				case 5:
-					userdata=atoi(token);
-					if(userdata!=User_Data.motor_Type)
-						User_Data.motor_Type=userdata;
+					userdata=atoi(token);					
+					User_Data.Butterfly_Type=userdata;
+					break;
+				case 6:
+					userdata=atoi(token);					
+					User_Data.motor_Type=userdata;
 					break;
 				default:
 					break;
