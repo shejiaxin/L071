@@ -11,10 +11,7 @@
 #define __IO    volatile 
 typedef __IO uint16_t vu16;
 
-struct BatteryMapping {
-    float voltage;
-    float percentage;
-};
+
 //=========================用户根据自己的需要设置
 #define EEPROM_BASE_ADDR	0x08080000	
 #define EEPROM_BYTE_SIZE	0x0FFF

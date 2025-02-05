@@ -76,7 +76,7 @@ void LoRa_Init(void)
 	RTC_Time();
 	Get_Adc_Value();
 	PWR12V_ON
-	HAL_Delay(1000);
+	HAL_Delay(5000);
 	read_SW();
 	memset(main_buff1,0,sizeof(main_buff1));
 	main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
@@ -254,16 +254,16 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 		RTC_Time();
 		
 		PWR12V_ON
-		HAL_Delay(1000);
+		HAL_Delay(5000);
 		read_SW();
 		memset(main_buff1,0,sizeof(main_buff1));
 		main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
 		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
 		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//·¢ËÍÊý¾Ý	
-		
-		PWR12V_OFF
 		HAL_Delay(100);
+		PWR12V_OFF
+		
 	}
 	else if(strstr((char *)data,"A1")&&(LoRaNet.LoRa_AddrL  == User_Data.lora_id)){
 		lora_get_A1_data((char *)data);
@@ -313,7 +313,7 @@ static void lora_get_A1_data(char *data)
 	token = strtok((char *)data, ",");
 	while (token != NULL) {
 			
-			//printf("token%d=%s\r\n",i,token);
+			printf("token%d=%s\r\n",i,token);
 			switch(i)
 			{
 				case 2:
@@ -322,7 +322,7 @@ static void lora_get_A1_data(char *data)
 					break;
 				case 3:
 					userdata=atoi(token);				
-					User_Data.Switch_Type1=userdata;
+					User_Data.Switch_Type2=userdata;
 					break;	
 				case 4:
 					userdata=atoi(token);			

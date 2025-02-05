@@ -180,7 +180,7 @@ void EC20_Init(void)
 		Get_Adc_Value();
 		
 		PWR12V_ON
-		HAL_Delay(1000);
+		HAL_Delay(5000);
 		read_SW();
 		
 		memset(main_buff1,0,sizeof(main_buff1));
@@ -211,7 +211,7 @@ void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 				RTC_Time();
 						
 				PWR12V_ON
-				HAL_Delay(1000);
+				HAL_Delay(5000);
 				read_SW();
 				memset(main_buff1,0,sizeof(main_buff1));
 				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,

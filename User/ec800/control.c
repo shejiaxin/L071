@@ -7,20 +7,7 @@ volatile uint8_t Motor_BD_State=0;
 
 #define SIZE 12
 
-struct BatteryMapping Mp[SIZE] = {
-				{6000, 0.0},
-        {6900, 5.0},
-        {7360, 10.0},
-        {7480, 20.0},
-        {7540, 30.0},
-        {7580, 40.0},
-        {7640, 50.0},
-        {7740, 60.0},
-        {7840, 70.0},
-        {7960, 80.0},
-        {8120, 90.0},
-        {8400, 100.0}
- };
+
 //EEPROM地址0x08080000 - 0x080817FF 6 * 1 KB//
 //0x08080000 为Connect_State 标准存放地址
 //0x08080000+5 为lora结构体 存放地址
@@ -53,16 +40,27 @@ void mcu_eeprom_read(uint32_t address, uint8_t *buffer, uint16_t len)
     }
 }
 
-static float calculateBatteryPercentage(float voltage, struct BatteryMapping* map, int size) {
-    for (int i = 0; i < size - 1; i++) {
-        if (voltage >= map[i].voltage && voltage <= map[i + 1].voltage) {
-            return ((voltage - map[i].voltage) / (map[i + 1].voltage - map[i].voltage)) 
-                   * (map[i + 1].percentage - map[i].percentage) + map[i].percentage;
-        }
-    }
-    return -1.0;  // Return -1 if the voltage is out of range
-}
 
+int getBatteryLevel(float vADC) {
+    // 计算斜率和截距
+    float m = (8.4 - 6.47) / (2.9 - 2.25);
+    float b = 8.4 - m * 2.9;
+
+    // 计算电池电压
+    float vBattery = m * vADC + b;
+
+    // 计算电量
+    int level;
+    if (vBattery >= 8.4) {
+        level = 100.0;
+    } else if (vBattery <= 6.47) {
+        level = 0.0;
+    } else {
+        level = (vBattery - 6.47) / (8.4 - 6.47) * 100.0;
+    }
+
+    return level;
+}
 
 struct motor_Data {
     int motor_0_val;
@@ -115,23 +113,27 @@ void read_SW(void)
 				.motor_90_val_4t = User_Data.motor_90_val_4t,
         .motor_180_val = User_Data.motor_180_val
     };
-		User_Data.adc = calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
+		User_Data.adc = getBatteryLevel(ADC_Values[2]);   //calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
 		if(IO1_IN==1&&IO2_IN==0){
 			User_Data.RW_Switch_Type1=1;
 		}
-	  if(IO1_IN==0&&IO2_IN==1){
+	  else if(IO1_IN==0&&IO2_IN==1){
 			User_Data.RW_Switch_Type1=0;
 		}
+		else User_Data.RW_Switch_Type1 = 255;
+		
 		if(IO3_IN==1&&IO4_IN==0){
-			User_Data.RW_Switch_Type1=1;
+			User_Data.RW_Switch_Type2=1;
 		}
-	  if(IO3_IN==0&&IO4_IN==1){
+	  else if(IO3_IN==0&&IO4_IN==1){
 			User_Data.RW_Switch_Type2=0;
 		}
-		User_Data.RW_Butterfly_Type=calculateRange(READ_MCP3421());
-//		User_Data.RW_Butterfly_Type=round(User_Data.RW_Butterfly_Type/10)*10;
+		else User_Data.RW_Switch_Type2 = 255;
 		
-//		User_Data.Double_Type=Get_Valve_Voltage(3);
+		User_Data.RW_Butterfly_Type=calculateRange(READ_MCP3421());
+		if(User_Data.RW_Butterfly_Type > 100)
+			User_Data.RW_Butterfly_Type = 255;
+
 		
 		if(ADC_Values[0] <= User_Data.motor_90_val_2t && ADC_Values[0] >= User_Data.motor_0_val)
 			User_Data.RW_motor_Type = calculateMotorAngle_2t(ADC_Values[0], &userData);
@@ -195,7 +197,7 @@ void Motor_Control(void)
 		PWR18V_ON
 		PWR12V_ON
 		RELAY_PW_ON
-		HAL_Delay(10);
+		HAL_Delay(100);
 		read_SW();
 		if(User_Data.Switch_Type1 != User_Data.RW_Switch_Type1){
 			if(User_Data.Switch_Type1){	
@@ -247,9 +249,7 @@ void Motor_Control(void)
 
 		Motor_sleep	
 		HAL_Delay(10);
-		PWR18V_OFF
-//		PWR12V_OFF
-		RELAY_PW_OFF
+		
 		if(User_Data.control_report_state == 1){
 			User_Data.control_report_state = 0;
 			if(Connect_State == 1)
@@ -268,6 +268,10 @@ void Motor_Control(void)
 				HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 			}	
 		}
+		HAL_Delay(100);
+		PWR18V_OFF
+		PWR12V_OFF
+		RELAY_PW_OFF
 	}
 
 }

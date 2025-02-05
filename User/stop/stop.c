@@ -85,7 +85,10 @@ static void system_config_before_stop(void)
     __HAL_RCC_GPIOB_CLK_DISABLE();
     __HAL_RCC_GPIOC_CLK_DISABLE();
 		__HAL_RCC_GPIOD_CLK_DISABLE();
-
+		
+		HAL_UART_MspDeInit(&hlpuart1);
+		HAL_UART_MspDeInit(&huart1);
+		HAL_UART_MspDeInit(&huart2);
 }
 
 static void stop_rtc_config(uint32_t sleep)
@@ -163,34 +166,28 @@ static void gpioInit(void)
 	__HAL_RCC_GPIOD_CLK_ENABLE();
 	
 	//LPUART1 GPIO Configuration
-	GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF4_LPUART1;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	//USART1 GPIO Configuration
-	GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF0_USART1;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	
-	//USART2 GPIO Configuration
-	GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF4_USART2;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-	//I2C2 GPIO Configuration
-	GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14;
-	GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF5_I2C2;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//	GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
+//	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+//	GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//	GPIO_InitStruct.Alternate = GPIO_AF4_LPUART1;
+//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//	//USART1 GPIO Configuration
+//	GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+//	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+//	GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//	GPIO_InitStruct.Alternate = GPIO_AF0_USART1;
+//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//	
+//	//USART2 GPIO Configuration
+//	GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
+//	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+//	GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//	GPIO_InitStruct.Alternate = GPIO_AF4_USART2;
+//	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 	
 	/**TIM2 GPIO Configuration
 	PB3     ------> TIM2_CH2
@@ -203,6 +200,13 @@ static void gpioInit(void)
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 	
 	MX_GPIO_Init();
+	MX_DMA_Init();
+	MX_LPUART1_UART_Init();
+	HAL_UART_MspInit(&hlpuart1);
+  MX_USART1_UART_Init();	
+	HAL_UART_MspInit(&huart1);
+  MX_USART2_UART_Init();
+	HAL_UART_MspInit(&huart2);
 
 }
 
@@ -233,8 +237,8 @@ static void gpioInit(void)
 }
 void lora_enter_stop_rtc_mode(uint32_t time)
 {
-		printf("进入休眠\r\n");
-
+		printf("\r\n进入休眠\r\n");
+		HAL_Delay(1000);
    //1. 配置stop之前各外设
     system_config_before_stop();
      //2.设置rtc唤醒时间20s

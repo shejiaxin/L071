@@ -63,7 +63,7 @@ void MX_LPUART1_UART_Init(void)
   }
   /* USER CODE BEGIN LPUART1_Init 2 */
 	
-	
+		HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)res, 1);    // 使能串口接收中断
 	//	__HAL_UART_ENABLE_IT(&hlpuart1, UART_IT_IDLE);    /* 开启串口空闲中断 */
 	//HAL_UART_Receive_DMA(&hlpuart1,	LPUART1_RxBuff, LPUART1_RX_BUFFSIZE);   /* 开启DMA传输 */
   /* USER CODE END LPUART1_Init 2 */

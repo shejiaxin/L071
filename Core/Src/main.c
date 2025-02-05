@@ -112,7 +112,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
-	HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)res, 1);    // 使能串口接收中断
+
 	HAL_TIM_Base_Start_IT(&htim7); // 开启定时器中断
 	
 	//GetSystemClocks();
