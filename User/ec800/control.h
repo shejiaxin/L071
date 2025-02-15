@@ -24,8 +24,9 @@ extern volatile uint8_t Motor_BD_State;
 void mcu_eeprom_write(uint32_t address, uint8_t *data, uint16_t len);
 void mcu_eeprom_read(uint32_t address, uint8_t *buffer, uint16_t len);
 void read_SW(void);
-void Control(DATA *data);
+void Control(DATA *data,uint8_t control_type);
 void Motor_Control(void);
+void Init_User_Data(DATA *data) ;
 void Motor_BD(void);
 
 #endif/*__CONTROL_H__*/

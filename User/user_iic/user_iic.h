@@ -20,7 +20,7 @@ void Write_MCP3421(unsigned char WR_Data);
 float READ_MCP3421(void);
 
 void MCP3421_Init(void);
-
+void MCP3421_Read(void);
 #endif /*__USER_IIC_H__*/
 
 

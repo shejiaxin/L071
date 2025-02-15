@@ -27,42 +27,14 @@ Project File Date:  01/31/2025
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'E:\Keil\ARM\ARMCC\Bin'
 Build target 'F071'
-compiling user_usart.c...
-..\User\user_usart\user_usart.c(89): warning:  #177-D: variable "cmd"  was declared but never referenced
-  	uint8_t cmd[3]={0xc1,0x00,0x07};
-..\User\user_usart\user_usart.c: 1 warning, 0 errors
-compiling user_iic.c...
-..\User\user_iic\user_iic.c(265): warning:  #550-D: variable "config"  was set but never used
-  	unsigned long int config;
-..\User\user_iic\user_iic.c(269): warning:  #177-D: variable "LSB"  was declared but never referenced
-      float LSB;
-..\User\user_iic\user_iic.c: 2 warnings, 0 errors
-compiling modbus_crc.c...
-compiling main.c...
-compiling lora.c...
-..\User\lora\lora.c(77): warning:  #223-D: function "Get_Adc_Value" declared implicitly
-  	Get_Adc_Value();
-..\User\lora\lora.c: 1 warning, 0 errors
-compiling control.c...
-..\User\ec800\control.c(230): warning:  #186-D: pointless comparison of unsigned integer with zero
-  		if(User_Data.motor_Type != User_Data.RW_motor_Type && User_Data.motor_Type >=0  && User_Data.motor_Type <=180){
-..\User\ec800\control.c: 1 warning, 0 errors
-compiling stop.c...
-compiling ec800.c...
-..\User\ec800\ec800.c(466): warning:  #1-D: last line of file ends without a newline
-  	
-..\User\ec800\ec800.c: 1 warning, 0 errors
-linking...
-Program Size: Code=39588 RO-data=392 RW-data=348 ZI-data=4660  
-FromELF: creating hex file...
 After Build - User command #1: ./keil5_disp_size_bar
 ram:
   RW_IRAM1 :0x20000000
-   20.00 KB :|¡ö¡ö¡ö¡ö________________|   24.45 % (    4.89 KB /    20.00 KB) [15472 B]
+   20.00 KB :|¡ö¡ö¡ö¡ö¡ö_______________|   26.09 % (    5.22 KB /    20.00 KB) [15136 B]
 flash:
   ER_IROM1 :0x8000000
-  128.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö______________|   30.50 % (   39.04 KB /   128.00 KB) [91092 B]
-"F071\F071.axf" - 0 Error(s), 6 Warning(s).
+  128.00 KB :|¡ö¡ö¡ö¡ö¡ö¡ö______________|   33.65 % (   43.07 KB /   128.00 KB) [86972 B]
+"F071\F071.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -86,7 +58,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE:5.5.0
       Include file:  CMSIS\Core\Include\tz_context.h
-Build Time Elapsed:  00:00:02
+Build Time Elapsed:  00:00:00
 </pre>
 </body>
 </html>

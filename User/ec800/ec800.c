@@ -12,13 +12,23 @@ volatile uint8_t EC800_State=0;
 
 
 //物联网平台参数
-char Mqtt_ip[55]="81.70.28.130";					  //IP地址
-int  Mqtt_port = 1883;											//(MOTT服务器)端口号28
-char Mqtt_client_id[20] = "stm32";	
-char Mqtt_user_name[20] = "pub";						//用户名
-char Mqtt_password[50] = "Publish123456";		//密码
-char Sub_Topics[50]="P000005/D000476/report";
-char Sub_Topics1[50]="P000005/D000476/command";
+//char Mqtt_ip[55]="81.70.28.130";					  //IP地址
+//int  Mqtt_port = 1883;											//(MOTT服务器)端口号28
+//char Mqtt_client_id[20] = "stm32";	
+//char Mqtt_user_name[20] = "pub";						//用户名
+//char Mqtt_password[50] = "Publish123456";		//密码
+//char Sub_Topics[50]="P000005/D000476/report";
+//char Sub_Topics1[50]="P000005/D000476/command";
+
+MqttParams Mqtt_params = {
+    .Mqtt_ip = "81.70.28.130",
+    .Mqtt_port = 1883,
+    .Mqtt_client_id = "stm32",
+    .Mqtt_user_name = "pub",
+    .Mqtt_password = "Publish123456",
+    .Sub_Topics = "P000005/D000476/report",
+    .Sub_Topics1 = "P000005/D000476/command"
+};
 
 char main_buff[main_buff_len];
 char main_buff1[main_buff_len];
@@ -60,6 +70,12 @@ _Bool UART_SendCmd(char *cmd, char *res, uint16_t timeout)
 						if(csqPos != NULL) {
 								sscanf(csqPos, "+CSQ: %d", &User_Data.csq);
 						}
+				}
+				if(strstr(cmd,"QCCID")){
+					strncpy(User_Data.ICCID,(char *)LPUART1_Data+10, 20);					
+				}
+				if(strstr(cmd,"QLTS")){
+					strncpy(User_Data.SIM_Time,(char *)LPUART1_Data+10, 20);				
 				}
 				UART_Clear();									
 				return 0;
@@ -120,7 +136,7 @@ static at_t at = {
 void MQTT_PublishQs0(char *data,uint16_t size)   
 {
 	memset(main_buff,0,sizeof(main_buff));
-	sprintf(main_buff," AT+QMTPUBEX=0,0,0,0,\"%s\",%d\r\n",Sub_Topics,size);
+	sprintf(main_buff," AT+QMTPUBEX=0,0,0,0,\"%s\",%d\r\n",Mqtt_params.Sub_Topics,size);
 	while(AT_CMD(main_buff,">",2000))
 	HAL_Delay(1);
   HAL_UART_Transmit(&hlpuart1,(uint8_t *)data,size,1000);	
@@ -151,26 +167,31 @@ void EC20_Init(void)
 	  HAL_Delay(1000);
 		while(AT_CMD("AT+CPIN?\r\n","READY",1000))
 		HAL_Delay(1000);
+		while(AT_CMD("AT+QCCID\r\n","OK",1000))
+		HAL_Delay(1000);
 		while(AT_CMD("AT+CGATT?\r\n","+CGATT: 1",1000))
 		//while(AT_CMD("AT+CGATT?\r\n","TT: 1",1000))
     HAL_Delay(100);
 		while(AT_CMD("AT+CREG?\r\n","0,1",2000)) 
 		HAL_Delay(100);
+		while(AT_CMD("AT+QLTS=2\r\n","OK",2000)) 
+		HAL_Delay(100);
+		set_date_and_time(User_Data.SIM_Time);	
 		while(AT_CMD("AT+CSQ\r\n","OK",1000))  
 	  HAL_Delay(100);
 		while(AT_CMD("AT+QMTCFG=\"qmtping\",0,30\r\n","OK",1000))
 		HAL_Delay(100);
 		while(AT_CMD("AT+QMTCFG=\"recv/mode\",0,0,1\r\n","OK",1000)) 
 		memset(main_buff,0,sizeof(main_buff));
-		main_len=sprintf(main_buff,"AT+QMTOPEN=0,\"%s\",%d\r\n",Mqtt_ip,Mqtt_port);
+		main_len=sprintf(main_buff,"AT+QMTOPEN=0,\"%s\",%d\r\n",Mqtt_params.Mqtt_ip,Mqtt_params.Mqtt_port);
 		while(AT_CMD(main_buff,"+QMTOPEN: 0,0",1000))  
 		HAL_Delay(100);
 		memset(main_buff,0,sizeof(main_buff));
-		main_len=sprintf(main_buff,"AT+QMTCONN=0,\"%s\",\"%s\",\"%s\"\r\n",User_Data.imei,Mqtt_user_name,Mqtt_password);
+		main_len=sprintf(main_buff,"AT+QMTCONN=0,\"%s\",\"%s\",\"%s\"\r\n",User_Data.imei,Mqtt_params.Mqtt_user_name,Mqtt_params.Mqtt_password);
 		while(AT_CMD(main_buff,"+QMTCONN: 0,0,0",1000))  
 		HAL_Delay(200);
 		memset(main_buff,0,sizeof(main_buff));
-		main_len=sprintf(main_buff,"AT+QMTSUB=0,1,\"%s\",0\r\n",Sub_Topics1);
+		main_len=sprintf(main_buff,"AT+QMTSUB=0,1,\"%s\",0\r\n",Mqtt_params.Sub_Topics1);
 		while(AT_CMD(main_buff,"+QMTSUB: 0,1,0,0",1000))
 		HAL_Delay(100);
 		EC800_State=1;
@@ -184,9 +205,9 @@ void EC20_Init(void)
 		read_SW();
 		
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
-		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
-		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+		main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
+		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.csq);
 		MQTT_PublishQs0(main_buff1,main_len);	
   	UART_Clear();
 		
@@ -208,15 +229,15 @@ void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 			if(strstr((char *)data,"A5")){
 				memset(data,0,datalen);
 				LPUART1_RX_STA = 0;
-				RTC_Time();
-						
+				AT_CMD("AT+CSQ\r\n","OK",1000);
+				RTC_Time();					
 				PWR12V_ON
 				HAL_Delay(5000);
 				read_SW();
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
-				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
-				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
+				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.csq);
 				MQTT_PublishQs0(main_buff1,main_len);	
 				PWR12V_OFF
 				HAL_Delay(100);
@@ -225,16 +246,18 @@ void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 				get_A1_data((char *)data);
 				memset(data,0,datalen);
 				LPUART1_RX_STA = 0;
-				Control(&User_Data);
+			  AT_CMD("AT+CSQ\r\n","OK",1000);
+				Control(&User_Data,1);
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B1,%s,OK",User_Data.imei);
+				main_len=sprintf(main_buff1,"B1,%s,OK,%d",User_Data.imei,User_Data.csq);
 				MQTT_PublishQs0(main_buff1,main_len);
 			}
 			else if(strstr((char *)data,"A2")&&strstr((char *)data,(char *)User_Data.imei)){
 				memset(data,0,datalen);
 				LPUART1_RX_STA = 0;
+				AT_CMD("AT+CSQ\r\n","OK",1000);
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B2,%s,OK",User_Data.imei);
+				main_len=sprintf(main_buff1,"B2,%s,OK,%d",User_Data.imei,User_Data.csq);
 				MQTT_PublishQs0(main_buff1,main_len);
 				enter_stop_rtc_mode(User_Data.Wake_time);
 			}
@@ -242,8 +265,9 @@ void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 				get_A3_data((char *)data);
 				memset(data,0,datalen);
 				LPUART1_RX_STA = 0;
-				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B3,%s,OK",User_Data.imei);
+			  AT_CMD("AT+CSQ\r\n","OK",1000);			
+				memset(main_buff1,0,sizeof(main_buff1));	
+				main_len=sprintf(main_buff1,"B3,%s,OK,%d",User_Data.imei,User_Data.csq);
 				MQTT_PublishQs0(main_buff1,main_len);
 			
 			}
@@ -251,8 +275,18 @@ void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 				get_A4_data((char *)data);
 				memset(data,0,datalen);
 				LPUART1_RX_STA = 0;
+				AT_CMD("AT+CSQ\r\n","OK",1000);
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B4,%s,OK",User_Data.imei);
+				main_len=sprintf(main_buff1,"B4,%s,OK,%d",User_Data.imei,User_Data.csq);
+				MQTT_PublishQs0(main_buff1,main_len);
+
+			}
+			else if(strstr((char *)data,"A6")&&strstr((char *)data,(char *)User_Data.imei)){				
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				AT_CMD("AT+CSQ\r\n","OK",1000);
+				memset(main_buff1,0,sizeof(main_buff1));		
+				main_len=sprintf(main_buff1,"B6,%s,%.20s,OK,%d",User_Data.imei,User_Data.ICCID,User_Data.csq);
 				MQTT_PublishQs0(main_buff1,main_len);
 
 			}
@@ -325,12 +359,6 @@ void get_A1_data(char *data)
 			}
 			token = strtok(NULL, ",");
 	}
-//	mcu_eeprom_write(0,&User_Data.Switch_Type1,1);
-//	mcu_eeprom_write(0,&User_Data.Switch_Type1,1);
-//	mcu_eeprom_write(0,&User_Data.Switch_Type1,1);
-//	mcu_eeprom_write(0,&User_Data.Switch_Type1,1);
-//	mcu_eeprom_write(0,&User_Data.Switch_Type1,1);
-//	mcu_eeprom_write(0,&User_Data.Switch_Type1,1);
 }
 
 void get_A3_data(char *data)
@@ -450,7 +478,8 @@ void get_A4_data(char *data)
     printf("Day: %d\n", day);
     printf("Hour: %d\n", hour);
     printf("Minute: %d\n", minute);
-    printf("Second: %d\n", second);
+    printf("Second: %d\n", second);			
+    sDate.WeekDay = 0;  //这里必须要设置星期，否则读取年份不对
   if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
   {
     Error_Handler();
@@ -462,5 +491,66 @@ void get_A4_data(char *data)
   }
 }
 
+void set_date_and_time(char *data) {
+      char *token;
+    int year, month, day, hour, minute, second;
+    RTC_DateTypeDef sDate;
+    RTC_TimeTypeDef sTime;
+
+    // 提取日期
+    token = strtok(data, "/");
+    year = atoi(token);
+    sDate.Year = year-2000;
+
+    token = strtok(NULL, "/");
+    month = atoi(token);
+    switch(month) {
+        case 1: sDate.Month = RTC_MONTH_JANUARY; break;
+        case 2: sDate.Month = RTC_MONTH_FEBRUARY; break;
+        case 3: sDate.Month = RTC_MONTH_MARCH; break;
+        case 4: sDate.Month = RTC_MONTH_APRIL; break;
+        case 5: sDate.Month = RTC_MONTH_MAY; break;
+        case 6: sDate.Month = RTC_MONTH_JUNE; break;
+        case 7: sDate.Month = RTC_MONTH_JULY; break;
+        case 8: sDate.Month = RTC_MONTH_AUGUST; break;
+        case 9: sDate.Month = RTC_MONTH_SEPTEMBER; break;
+        case 10: sDate.Month = RTC_MONTH_OCTOBER; break;
+        case 11: sDate.Month = RTC_MONTH_NOVEMBER; break;
+        case 12: sDate.Month = RTC_MONTH_DECEMBER; break;
+        default: break;
+    }
+
+    token = strtok(NULL, ",");
+    day = atoi(token);
+    sDate.Date = day;
+
+    // 提取时间
+    token = strtok(NULL, ":");
+    hour = atoi(token);
+    sTime.Hours = hour;
+
+    token = strtok(NULL, ":");
+    minute = atoi(token);
+    sTime.Minutes = minute;
+
+    token = strtok(NULL, "");
+    second = atoi(token);
+    sTime.Seconds = second;
+
+    printf("Year: %d\n", year);
+    printf("Month: %d\n", month);
+    printf("Day: %d\n", day);
+    printf("Hour: %d\n", hour);
+    printf("Minute: %d\n", minute);
+    printf("Second: %d\n", second);
+    sDate.WeekDay = 0;  //这里必须要设置星期，否则读取年份不对
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+        Error_Handler();
+    }
+  
+    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+        Error_Handler();
+    }
+}
 
 	

@@ -6,7 +6,7 @@
 
 void LoRa_GetData(LoRaParameter LoRa)
 {	         			           	                                
-	printf("模块地址:0x%02X\r\n",LoRa.LoRa_AddrL);                //串口输出信息
+	printf("模块地址:0x%02X\r\n",LoRa.LoRa_AddrL + (LoRa.LoRa_AddrH << 8) );                //串口输出信息
 	switch(LoRa.LoRa_UartMode){                                                //判断串口参数
 		case LoRa_8N1 :	 printf("8数据位 无校验 1停止位\r\n");        //串口输出信息
 						 break;                                          //跳出
@@ -75,6 +75,58 @@ void LoRa_GetData(LoRaParameter LoRa)
 						  break;                                         //跳出
 	}
 }
+
+
+#define MAX_PAIRS 20
+
+void parse_pair(char* pair,MqttParams *params) {
+    char *key = strtok(pair, "=");
+    if (key == NULL) {
+        printf("Error: Missing key in pair\n");
+        return;
+    }
+    char *value = strtok(NULL, "=");
+    if (value == NULL) {
+        printf("Error: Missing value for key: %s\n", key);
+        return;
+    }
+    printf("Key: %s, Value: %s\n", key, value);
+    if (strcmp(key, "Mqtt_ip") == 0) {
+		strncpy(params->Mqtt_ip, value, sizeof(params->Mqtt_ip) - 1);
+    } else if (strcmp(key, "Mqtt_port") == 0) {
+        params->Mqtt_port = atoi(value);
+    } else if (strcmp(key, "Mqtt_client_id") == 0) {
+        strncpy(params->Mqtt_client_id, value, sizeof(params->Mqtt_client_id) - 1);
+    } else if (strcmp(key, "Mqtt_user_name") == 0) {
+        strncpy(params->Mqtt_user_name, value, sizeof(params->Mqtt_user_name) - 1);
+    } else if (strcmp(key, "Mqtt_password") == 0) {
+        strncpy(params->Mqtt_password, value, sizeof(params->Mqtt_password) - 1);
+    } else if (strcmp(key, "Sub_Topics") == 0) {
+        strncpy(params->Sub_Topics, value, sizeof(params->Sub_Topics) - 1);
+    } else if (strcmp(key, "Sub_Topics1") == 0) {
+        strncpy(params->Sub_Topics1, value, sizeof(params->Sub_Topics1) - 1);
+    }
+	else;
+	mcu_eeprom_write(41, (uint8_t*)&params, sizeof(params));
+}
+
+int parsecmd(char *data) {
+    char *pairs[MAX_PAIRS];
+    int pair_count = 0;
+
+    char *pair = strtok(data, ",");
+    while (pair != NULL && pair_count < MAX_PAIRS) {
+        pairs[pair_count++] = pair;
+        pair = strtok(NULL, ",");
+    }
+
+    for (int i = 0; i < pair_count; i++) {
+        parse_pair(pairs[i],&Mqtt_params);
+    }
+
+    return 1;
+}
+
 /*-------------------------------------------------*/
 /*函数名：debug串口1被动事件                            */
 /*参  数：data ：数据                              */
@@ -86,9 +138,7 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 	/*----------------------------------------------*/
 	/*           接收设置LoRa模块返回数据           */
 	/*----------------------------------------------*/
-	uint8_t cmd[3]={0xc1,0x00,0x07};
 	//Modbus_CRC16(data, datalen);
-	
 		switch (data[0]){
 			case 0xE0:
 				Connect_State = data[1];
@@ -101,9 +151,9 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 				NVIC_SystemReset();                           //重启
 				break;
 			case 0xE1:
-				//LoRaNet.LoRa_AddrH = data[1];
-				LoRaNet.LoRa_AddrL = data[1];
-				switch(data[2]){                                                
+				LoRaNet.LoRa_AddrH = data[1];
+				LoRaNet.LoRa_AddrL = data[2];
+				switch(data[3]){                                                
 					case 0:
 						LoRaNet.LoRa_airvelocity = LoRa_2_4;
 						break;  
@@ -125,7 +175,7 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 					default:
 						break;
 				}	
-				LoRaNet.LoRa_CH = data[3];
+				LoRaNet.LoRa_CH = data[4];
 				
 				LoRaNet.LoRa_Baudrate = LoRa_9600;
 				mcu_eeprom_write(5,(uint8_t *)&LoRaNet,sizeof(LoRaNet));	
@@ -139,6 +189,10 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 //				LoRa_MODE2; 
 //				HAL_Delay(200); 	
 //			  HAL_UART_Transmit(&huart2, cmd, 3, 0xFF);//发送数据
+				break;
+			case 'M':
+				/*Mqtt_ip=81.70.28.130,Mqtt_port=1883,Mqtt_client_id=stm32,Mqtt_user_name=pub,Mqtt_password=Publish123456,Sub_Topics=P000005/D000476/report,Sub_Topics1=P000005/D000476/command*/
+				parsecmd((char *)data);			
 				break;
 			case 0xB1:
 				Motor_OFF

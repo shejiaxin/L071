@@ -55,3 +55,4 @@ f071\lora.o: ..\User\modbus_crc\modbus_crc.h
 f071\lora.o: ..\User\stop\stop.h
 f071\lora.o: ..\User\user_usart\user_usart.h
 f071\lora.o: E:\Keil\ARM\ARMCC\Bin\..\include\stdlib.h
+f071\lora.o: ../Core/Inc/adc.h

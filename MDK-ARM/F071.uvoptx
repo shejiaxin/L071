@@ -213,117 +213,117 @@
         <Ww>
           <count>10</count>
           <WinNumber>1</WinNumber>
-          <ItemText>User_Data,0x0A</ItemText>
+          <ItemText>Uart2Flag</ItemText>
         </Ww>
         <Ww>
           <count>11</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Uart2Flag</ItemText>
+          <ItemText>Uart1_Data</ItemText>
         </Ww>
         <Ww>
           <count>12</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Uart1_Data</ItemText>
+          <ItemText>LoRaNet</ItemText>
         </Ww>
         <Ww>
           <count>13</count>
           <WinNumber>1</WinNumber>
-          <ItemText>LoRaNet</ItemText>
+          <ItemText>Connect_State</ItemText>
         </Ww>
         <Ww>
           <count>14</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Connect_State</ItemText>
+          <ItemText>lora_id</ItemText>
         </Ww>
         <Ww>
           <count>15</count>
           <WinNumber>1</WinNumber>
-          <ItemText>lora_id</ItemText>
+          <ItemText>main_buff</ItemText>
         </Ww>
         <Ww>
           <count>16</count>
           <WinNumber>1</WinNumber>
-          <ItemText>main_buff</ItemText>
+          <ItemText>res</ItemText>
         </Ww>
         <Ww>
           <count>17</count>
           <WinNumber>1</WinNumber>
-          <ItemText>res</ItemText>
+          <ItemText>LPUART1_RX_STA</ItemText>
         </Ww>
         <Ww>
           <count>18</count>
           <WinNumber>1</WinNumber>
-          <ItemText>LPUART1_RX_STA</ItemText>
+          <ItemText>GetTime</ItemText>
         </Ww>
         <Ww>
           <count>19</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GetTime</ItemText>
+          <ItemText>ADC_Values,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>20</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ADC_Values,0x0A</ItemText>
+          <ItemText>dma_adc_data</ItemText>
         </Ww>
         <Ww>
           <count>21</count>
           <WinNumber>1</WinNumber>
-          <ItemText>dma_adc_data</ItemText>
+          <ItemText>DMA_RECEIVE_OVER</ItemText>
         </Ww>
         <Ww>
           <count>22</count>
           <WinNumber>1</WinNumber>
-          <ItemText>DMA_RECEIVE_OVER</ItemText>
+          <ItemText>uart2Cnt</ItemText>
         </Ww>
         <Ww>
           <count>23</count>
           <WinNumber>1</WinNumber>
-          <ItemText>uart2Cnt</ItemText>
+          <ItemText>Motor_BD_State</ItemText>
         </Ww>
         <Ww>
           <count>24</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Motor_BD_State</ItemText>
+          <ItemText>BD_State</ItemText>
         </Ww>
         <Ww>
           <count>25</count>
           <WinNumber>1</WinNumber>
-          <ItemText>BD_State</ItemText>
+          <ItemText>Uart1Flag</ItemText>
         </Ww>
         <Ww>
           <count>26</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Uart1Flag</ItemText>
+          <ItemText>SYSCLK_Frequency,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>27</count>
           <WinNumber>1</WinNumber>
-          <ItemText>hi2c</ItemText>
+          <ItemText>HCLK_Frequency,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>28</count>
           <WinNumber>1</WinNumber>
-          <ItemText>SYSCLK_Frequency,0x0A</ItemText>
+          <ItemText>PCLK1_Frequency,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>29</count>
           <WinNumber>1</WinNumber>
-          <ItemText>HCLK_Frequency,0x0A</ItemText>
+          <ItemText>PCLK2_Frequency,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>30</count>
           <WinNumber>1</WinNumber>
-          <ItemText>PCLK1_Frequency,0x0A</ItemText>
+          <ItemText>main_buff1</ItemText>
         </Ww>
         <Ww>
           <count>31</count>
           <WinNumber>1</WinNumber>
-          <ItemText>PCLK2_Frequency,0x0A</ItemText>
+          <ItemText>User_Data</ItemText>
         </Ww>
         <Ww>
           <count>32</count>
           <WinNumber>1</WinNumber>
-          <ItemText>main_buff1</ItemText>
+          <ItemText>Mqtt_params</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -352,7 +352,7 @@
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>dma_adc_data</ItemText>
+          <ItemText>key</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>

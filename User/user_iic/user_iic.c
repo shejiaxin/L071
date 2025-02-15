@@ -326,7 +326,31 @@ void MCP3421_Init(void)
 {
 	uint8_t parameter = 0x9c; //系统参数配置为18位精度，自动转换模式，无PGA增益。配置字见数据手册。
 	IIC_NCA_RESET_ON
-	TCA9548A_SetChannel(2);
-	Write_MCP3421(parameter);
+	for(uint8_t i =0; i<3;i++){
+		TCA9548A_SetChannel(i);
+		Write_MCP3421(parameter);
+		HAL_Delay(10);
+	}
 }
 
+void MCP3421_Read(void)
+{
+	for(uint8_t i =0; i<3;i++){
+		TCA9548A_SetChannel(i);
+    switch (i)
+    {
+    case  0:
+      User_Data.Pressure1 = READ_MCP3421();
+      break;
+    case  1:
+      User_Data.Pressure2 = READ_MCP3421();
+      break;
+    case  2:
+      User_Data.Pressure3 = READ_MCP3421();
+      break;
+    default:
+      break;
+    }
+    HAL_Delay(10);
+	}
+}

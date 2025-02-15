@@ -137,8 +137,28 @@ int main(void)
 	
 	if(Connect_State == 1)
 	{
+		mcu_eeprom_read(41, (uint8_t*)&Mqtt_params, sizeof(Mqtt_params));
+    if(Mqtt_params.Mqtt_ip[0] == '\0' ||
+        Mqtt_params.Mqtt_port == 0 ||
+        Mqtt_params.Mqtt_client_id[0] == '\0' ||
+        Mqtt_params.Mqtt_user_name[0] == '\0' ||
+        Mqtt_params.Mqtt_password[0] == '\0' ||
+        Mqtt_params.Sub_Topics[0] == '\0' ||
+        Mqtt_params.Sub_Topics1[0] == '\0'){
+        static  MqttParams param = {
+            .Mqtt_ip = "81.70.28.130",
+            .Mqtt_port = 1883,
+            .Mqtt_client_id = "stm32",
+            .Mqtt_user_name = "pub",
+            .Mqtt_password = "Publish123456",
+            .Sub_Topics = "P000005/D000476/report",
+            .Sub_Topics1 = "P000005/D000476/command"
+        };
+        memcpy(&Mqtt_params, &param, sizeof(MqttParams));
+      }
 		LoRa_PowerON;
 		EC20_Init();
+		
 	}
 	if(Connect_State == 2){
 		E22_ON;

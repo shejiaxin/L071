@@ -11,7 +11,15 @@ volatile uint8_t Motor_BD_State=0;
 //EEPROM地址0x08080000 - 0x080817FF 6 * 1 KB//
 //0x08080000 为Connect_State 标准存放地址
 //0x08080000+5 为lora结构体 存放地址
-
+/*  0-4   Connect_State
+	5-19  LoRaNet 结构体
+	20    Motor_BD_State
+	21-25 User_Data.motor_0_val
+	26-30 User_Data.motor_90_val_2t
+	31-35 User_Data.motor_90_val_4t  
+	36-40 User_Data.motor_180_val
+	41-291 MqttParams 结构体
+*/
 void mcu_eeprom_write(uint32_t address, uint8_t *data, uint16_t len)
 {
     DIS_INT
@@ -26,6 +34,27 @@ void mcu_eeprom_write(uint32_t address, uint8_t *data, uint16_t len)
     HAL_FLASHEx_DATAEEPROM_Lock();
 		EN_INT
     HAL_Delay(10);
+		
+//		// 禁用中断，防止写入过程中发生意外
+//    DIS_INT;
+
+//    // 解锁 EEPROM
+//    if (HAL_FLASHEx_DATAEEPROM_Unlock() != HAL_OK) {
+//        EN_INT;
+//        return;
+//    }
+//    HAL_StatusTypeDef status = HAL_OK;
+//    for (uint16_t i = 0; i < len; i++) {
+//        status = HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_BYTE, EEPROM_BASE_ADDR + address + i, data[i]);
+//        if (status != HAL_OK) {
+//            break;  // 遇到错误就停止写入
+//        }
+//    }
+//    // 锁定 EEPROM
+//    HAL_FLASHEx_DATAEEPROM_Lock();
+//    
+//    // 重新启用中断
+//    EN_INT;
 }
 /*
  * 读取EEPROM
@@ -41,22 +70,22 @@ void mcu_eeprom_read(uint32_t address, uint8_t *buffer, uint16_t len)
 }
 
 
-int getBatteryLevel(float vADC) {
+float getBatteryLevel(float vADC) {
     // 计算斜率和截距
-    float m = (8.4 - 6.47) / (2.9 - 2.25);
-    float b = 8.4 - m * 2.9;
+    float m = (8400 - 6470) / (2900 - 2250);
+    float b = 8400 - m * 2900;
 
     // 计算电池电压
     float vBattery = m * vADC + b;
 
     // 计算电量
-    int level;
-    if (vBattery >= 8.4) {
+    float level;
+    if (vBattery >= 8400) {
         level = 100.0;
-    } else if (vBattery <= 6.47) {
+    } else if (vBattery <= 6470) {
         level = 0.0;
     } else {
-        level = (vBattery - 6.47) / (8.4 - 6.47) * 100.0;
+        level = (vBattery - 6470) / (8400 - 6470) * 100.0;
     }
 
     return level;
@@ -105,6 +134,15 @@ int calculateRange(uint32_t reading)
 
     return rounded_angle;
 }
+
+float getPressure(float current) {
+    float m = 0.6 / (2000 - 400); 
+    float b = -m * 4; 
+	if(current <=400 || current > 2000) return 0; // 如果电流值不在范围内，返回0
+    // 计算压力
+    float pressure = m * current + b;
+    return pressure;
+}
 void read_SW(void)
 {		
 		struct motor_Data userData = {
@@ -113,11 +151,12 @@ void read_SW(void)
 				.motor_90_val_4t = User_Data.motor_90_val_4t,
         .motor_180_val = User_Data.motor_180_val
     };
-		User_Data.adc = getBatteryLevel(ADC_Values[2]);   //calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
+		MCP3421_Read();	
+		User_Data.adc =(int)getBatteryLevel(ADC_Values[2]);   //calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
 		if(IO1_IN==1&&IO2_IN==0){
 			User_Data.RW_Switch_Type1=1;
 		}
-	  else if(IO1_IN==0&&IO2_IN==1){
+	  	else if(IO1_IN==0&&IO2_IN==1){
 			User_Data.RW_Switch_Type1=0;
 		}
 		else User_Data.RW_Switch_Type1 = 255;
@@ -125,12 +164,14 @@ void read_SW(void)
 		if(IO3_IN==1&&IO4_IN==0){
 			User_Data.RW_Switch_Type2=1;
 		}
-	  else if(IO3_IN==0&&IO4_IN==1){
+	 	 else if(IO3_IN==0&&IO4_IN==1){
 			User_Data.RW_Switch_Type2=0;
 		}
 		else User_Data.RW_Switch_Type2 = 255;
 		
-		User_Data.RW_Butterfly_Type=calculateRange(READ_MCP3421());
+		User_Data.RW_Butterfly_Type=calculateRange(User_Data.Pressure3);
+		User_Data.RW_Pressure1=getPressure(User_Data.Pressure1);
+		User_Data.RW_Pressure2=getPressure(User_Data.Pressure2);
 		if(User_Data.RW_Butterfly_Type > 100)
 			User_Data.RW_Butterfly_Type = 255;
 
@@ -146,25 +187,60 @@ void read_SW(void)
 }
 
 
-void Control(DATA *data)
+void Control(DATA *data,uint8_t control_type)
 {
-	if(data->Switch_Type1 != data->RW_Switch_Type1   		||
-			data->Switch_Type2 != data->RW_Switch_Type2 		||
-			data->Double_Type != data->RW_Double_Type 			||		
-			data->Butterfly_Type != data->RW_Butterfly_Type ||
-			data->motor_Type != data->RW_motor_Type 	
-	)
-	data->control_state =1;
-	if(data->Switch_Type1 == data->RW_Switch_Type1   		&&
-			data->Switch_Type2 == data->RW_Switch_Type2 		&&
-			data->Double_Type == data->RW_Double_Type 			&&		
-			data->Butterfly_Type == data->RW_Butterfly_Type &&
-			data->motor_Type == data->RW_motor_Type 	
-	)
-	data->control_state =0;
+	switch (control_type) {
+        case 7: // A7 指令，只检查 Switch_Type1
+            if (data->Switch_Type1 != data->RW_Switch_Type1) {
+                data->control_state = 1;
+            } else {
+                data->control_state = 0;
+            }
+            break;
 
+        case 8: // A8 指令，只检查 Switch_Type2
+            if (data->Switch_Type2 != data->RW_Switch_Type2) {
+                data->control_state = 1;
+            } else {
+                data->control_state = 0;
+            }
+            break;
 
+        case 9: // A9 指令，只检查 Butterfly_Type
+            if (data->Butterfly_Type != data->RW_Butterfly_Type) {
+                data->control_state = 1;
+            } else {
+                data->control_state = 0;
+            }
+            break;
+
+        case 10: // AA 指令，只检查 motor_Type
+            if (data->motor_Type != data->RW_motor_Type) {
+                data->control_state = 1;
+            } else {
+                data->control_state = 0;
+            }
+            break;
+
+        default: // 默认检查所有字段
+			if(data->Switch_Type1 != data->RW_Switch_Type1   		||
+				data->Switch_Type2 != data->RW_Switch_Type2 		||
+				data->Double_Type != data->RW_Double_Type 			||		
+				data->Butterfly_Type != data->RW_Butterfly_Type ||
+				data->motor_Type != data->RW_motor_Type 	
+			)
+			data->control_state =1;
+			if(data->Switch_Type1 == data->RW_Switch_Type1   		&&
+				data->Switch_Type2 == data->RW_Switch_Type2 		&&
+				data->Double_Type == data->RW_Double_Type 			&&		
+				data->Butterfly_Type == data->RW_Butterfly_Type &&
+				data->motor_Type == data->RW_motor_Type 	
+			)
+			data->control_state =0;
+            break;
+    }
 }
+
 #define TIMER_MAX 1000 // Maximum value for the timer
 #define MIN_ANGLE 0.0  // Minimum angle in degrees
 #define MAX_ANGLE 100.0 // Maximum angle in degrees
@@ -243,7 +319,7 @@ void Motor_Control(void)
 		}
 		else ;
 		
-		Control(&User_Data);
+		Control(&User_Data,1);
 	}
 	else{
 
@@ -255,15 +331,15 @@ void Motor_Control(void)
 			if(Connect_State == 1)
 			{	
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
-				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
+				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
 				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
 				MQTT_PublishQs0(main_buff1,main_len);	
 			}
 			if(Connect_State == 2){
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%d,%d/%d/%d-%d:%d:%d,%d",LoRaNet.LoRa_AddrL,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
-				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.Wake_time,
+				main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
 				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
 				HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 			}	
@@ -276,6 +352,19 @@ void Motor_Control(void)
 
 }
  
+void Init_User_Data(DATA *data) 
+{
+    data->Switch_Type1 = 0;
+    data->Switch_Type2 = 0;
+    data->Butterfly_Type = 0;
+    data->motor_Type = 0;
+    data->RW_Switch_Type1 = 0;
+    data->RW_Switch_Type2 = 0;
+    data->RW_Butterfly_Type = 0;
+    data->RW_motor_Type = 0;
+    data->control_state = 0;
+    data->control_report_state = 0;
+}
 
 uint8_t BD_State = 0;
 void Motor_BD(void)
