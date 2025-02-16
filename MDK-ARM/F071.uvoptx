@@ -223,7 +223,7 @@
         <Ww>
           <count>12</count>
           <WinNumber>1</WinNumber>
-          <ItemText>LoRaNet</ItemText>
+          <ItemText>LoRaNet,0x10</ItemText>
         </Ww>
         <Ww>
           <count>13</count>
@@ -323,7 +323,12 @@
         <Ww>
           <count>32</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Mqtt_params</ItemText>
+          <ItemText>Mqtt_params,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>33</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>main_buff1</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -398,6 +403,12 @@
       <pszMrulep></pszMrulep>
       <pSingCmdsp></pSingCmdsp>
       <pMultCmdsp></pMultCmdsp>
+      <SystemViewers>
+        <Entry>
+          <Name>System Viewer\TIM2</Name>
+          <WinId>35905</WinId>
+        </Entry>
+      </SystemViewers>
       <DebugDescription>
         <Enable>1</Enable>
         <EnableFlashSeq>0</EnableFlashSeq>

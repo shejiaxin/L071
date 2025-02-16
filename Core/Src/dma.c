@@ -25,6 +25,7 @@
 #include "usart.h"
 #include <stdio.h>
 #include <string.h>
+#include "include.h"
 
 extern TIM_HandleTypeDef htim7;
 volatile uint8_t Uart1Flag = 0;
@@ -110,6 +111,13 @@ void USART1_DMAHandler(void)
         HAL_UART_DMAStop(&huart1);                                              // 停止本次DMA传输
         uart1Cnt = UART1_RX_BUFFSIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx); // 计算接收到的数据长度
         memcpy(Uart1_Data, Uart1_RxBuff, uart1Cnt);
+				if(Uart1_Data[0]==0xE3){
+					Connect_State = 2;
+					printf("Connect_State = Lora");		
+					printf("\r\n按重启键复位,切换lora模式，并重新输入MQTT数据\r\n");
+					mcu_eeprom_write(0,(uint8_t *)&Connect_State,1);					
+					while(1){}  
+				}		
         Uart1Flag = 1;
         HAL_UART_Receive_DMA(&huart1, (uint8_t *)Uart1_RxBuff, UART1_RX_BUFFSIZE); // 重启开始DMA传输
     }

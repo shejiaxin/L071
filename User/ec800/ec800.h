@@ -117,6 +117,11 @@ void Secrecy_GetUID(uint32_t * pBuf);
 void get_A1_data(char *data);
 void get_A3_data(char *data);
 void get_A4_data(char *data);
+void get_A7_data(char *data);
+void get_A8_data(char *data);
+void get_A9_data(char *data);
+void get_AA_data(char *data);
+
 void set_date_and_time(char *data);
 #endif /*__EC800_H*/
 

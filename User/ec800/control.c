@@ -136,9 +136,10 @@ int calculateRange(uint32_t reading)
 }
 
 float getPressure(float current) {
-    float m = 0.6 / (2000 - 400); 
-    float b = -m * 4; 
-	if(current <=400 || current > 2000) return 0; // 如果电流值不在范围内，返回0
+    float m = 0.000375;
+    float b = -0.15;
+    // 如果电流值不在范围内，返回-1（或其他错误代码）
+    if(current < 400 || current > 2000) return 0;
     // 计算压力
     float pressure = m * current + b;
     return pressure;
@@ -192,7 +193,7 @@ void Control(DATA *data,uint8_t control_type)
 	switch (control_type) {
         case 7: // A7 指令，只检查 Switch_Type1
             if (data->Switch_Type1 != data->RW_Switch_Type1) {
-                data->control_state = 1;
+                data->control_state = 7;
             } else {
                 data->control_state = 0;
             }
@@ -200,7 +201,7 @@ void Control(DATA *data,uint8_t control_type)
 
         case 8: // A8 指令，只检查 Switch_Type2
             if (data->Switch_Type2 != data->RW_Switch_Type2) {
-                data->control_state = 1;
+                data->control_state = 8;
             } else {
                 data->control_state = 0;
             }
@@ -208,7 +209,7 @@ void Control(DATA *data,uint8_t control_type)
 
         case 9: // A9 指令，只检查 Butterfly_Type
             if (data->Butterfly_Type != data->RW_Butterfly_Type) {
-                data->control_state = 1;
+                data->control_state = 9;
             } else {
                 data->control_state = 0;
             }
@@ -216,7 +217,7 @@ void Control(DATA *data,uint8_t control_type)
 
         case 10: // AA 指令，只检查 motor_Type
             if (data->motor_Type != data->RW_motor_Type) {
-                data->control_state = 1;
+                data->control_state = 10;
             } else {
                 data->control_state = 0;
             }
@@ -299,9 +300,9 @@ void Motor_Control(void)
 				
 			}
 		}
-
-		TIM2->CCR2 = calculateCCR(User_Data.Butterfly_Type);
-		
+		if(User_Data.Butterfly_Type != User_Data.RW_Butterfly_Type && User_Data.Butterfly_Type >=0  && User_Data.Butterfly_Type <=100){
+			TIM2->CCR2 = calculateCCR(User_Data.Butterfly_Type);
+		}
 		/*服务器下发电机状态不等于读取的电机角度，并且范围在0-180 度时 */
 		if(User_Data.motor_Type != User_Data.RW_motor_Type && User_Data.motor_Type >=0  && User_Data.motor_Type <=180){
 			if(User_Data.motor_Type < User_Data.RW_motor_Type){
@@ -321,7 +322,78 @@ void Motor_Control(void)
 		
 		Control(&User_Data,1);
 	}
-	else{
+	else if(User_Data.control_state == 7){
+		User_Data.control_report_state = 1;
+		PWR18V_ON
+		PWR12V_ON
+		RELAY_PW_ON
+		HAL_Delay(100);
+		read_SW();
+		if(User_Data.Switch_Type1 != User_Data.RW_Switch_Type1){
+			if(User_Data.Switch_Type1){	
+				FM1_Motor_ON
+			}
+			else{
+				FM1_Motor_OFF
+			}
+		}
+		Control(&User_Data,7);		
+	}
+	else if(User_Data.control_state == 8){
+		User_Data.control_report_state = 1;
+		PWR18V_ON
+		PWR12V_ON
+		RELAY_PW_ON
+		HAL_Delay(100);
+		read_SW();
+		if(User_Data.Switch_Type2 != User_Data.RW_Switch_Type2){
+			if(User_Data.Switch_Type2){	
+				FM2_Motor_ON
+			}
+			else{
+				FM2_Motor_OFF
+			}
+		}
+		Control(&User_Data,8);		
+	}
+	else if(User_Data.control_state == 9){
+		User_Data.control_report_state = 1;
+		PWR18V_ON
+		PWR12V_ON
+		RELAY_PW_ON
+		HAL_Delay(100);
+		read_SW();
+		if(User_Data.Butterfly_Type != User_Data.RW_Butterfly_Type && User_Data.Butterfly_Type >=0  && User_Data.Butterfly_Type <=100){
+			TIM2->CCR2 = calculateCCR(User_Data.Butterfly_Type);
+		}
+		Control(&User_Data,9);		
+	}
+	else if(User_Data.control_state == 10){
+		User_Data.control_report_state = 1;
+		PWR18V_ON
+		PWR12V_ON
+		RELAY_PW_ON
+		HAL_Delay(100);
+		read_SW();
+		/*服务器下发电机状态不等于读取的电机角度，并且范围在0-180 度时 */
+		if(User_Data.motor_Type != User_Data.RW_motor_Type && User_Data.motor_Type >=0  && User_Data.motor_Type <=180){
+			if(User_Data.motor_Type < User_Data.RW_motor_Type){
+					Motor_ON				
+			}
+			else if(User_Data.motor_Type > User_Data.RW_motor_Type){
+					Motor_OFF				
+			}
+			else{
+					Motor_sleep
+			}		
+		}
+		else if(User_Data.motor_Type == User_Data.RW_motor_Type ){
+					Motor_brake
+		}
+		else ;
+		Control(&User_Data,10);		
+	}		
+	else if(User_Data.control_state == 0){
 
 		Motor_sleep	
 		HAL_Delay(10);
@@ -331,16 +403,16 @@ void Motor_Control(void)
 			if(Connect_State == 1)
 			{	
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
 				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
-				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.csq);
 				MQTT_PublishQs0(main_buff1,main_len);	
 			}
 			if(Connect_State == 2){
 				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+				main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
 				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
-				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
+				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,LoRaNet.LoRa_CH,User_Data.lora_rssi);
 				HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 			}	
 		}
@@ -349,6 +421,7 @@ void Motor_Control(void)
 		PWR12V_OFF
 		RELAY_PW_OFF
 	}
+	else;	
 
 }
  

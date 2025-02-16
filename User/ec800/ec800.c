@@ -247,6 +247,9 @@ void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 				memset(data,0,datalen);
 				LPUART1_RX_STA = 0;
 			  AT_CMD("AT+CSQ\r\n","OK",1000);
+				PWR12V_ON
+				HAL_Delay(5000);
+				read_SW();
 				Control(&User_Data,1);
 				memset(main_buff1,0,sizeof(main_buff1));
 				main_len=sprintf(main_buff1,"B1,%s,OK,%d",User_Data.imei,User_Data.csq);
@@ -289,6 +292,56 @@ void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 				main_len=sprintf(main_buff1,"B6,%s,%.20s,OK,%d",User_Data.imei,User_Data.ICCID,User_Data.csq);
 				MQTT_PublishQs0(main_buff1,main_len);
 
+			}
+			else if (strstr((char *)data, "A7") && strstr((char *)data,(char *)User_Data.imei)) {
+				get_A7_data((char *)data);
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				PWR12V_ON
+				HAL_Delay(5000);
+				read_SW();
+				Control(&User_Data, 7); // 调用 Control，传入控制类型 7
+				// 发送响应 B7,<实际状态>,OK
+				memset(main_buff1, 0, sizeof(main_buff1));
+				main_len = sprintf(main_buff1, "B7,%s,OK,%d" ,User_Data.imei, User_Data.csq);
+				MQTT_PublishQs0(main_buff1,main_len);
+			}
+			else if(strstr((char *)data, "A8") && strstr((char *)data,(char *)User_Data.imei)){
+				get_A8_data((char *)data);
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;
+				PWR12V_ON
+				HAL_Delay(5000);
+				read_SW();
+				Control(&User_Data,8);
+				memset(main_buff1, 0, sizeof(main_buff1));
+				main_len = sprintf(main_buff1, "B8,%s,OK,%d", User_Data.imei, User_Data.csq);
+				MQTT_PublishQs0(main_buff1,main_len);
+				
+			}
+			else if(strstr((char *)data, "A9") && strstr((char *)data,(char *)User_Data.imei)) {
+				get_A9_data((char *)data);
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;		
+				PWR12V_ON
+				HAL_Delay(5000);
+				read_SW();			
+				Control(&User_Data,9);
+				memset(main_buff1, 0, sizeof(main_buff1));
+				main_len = sprintf(main_buff1, "B9,%s,OK,%d", User_Data.imei, User_Data.csq);
+				MQTT_PublishQs0(main_buff1,main_len);					
+			}
+			else if(strstr((char *)data, "AA") && strstr((char *)data,(char *)User_Data.imei)) {
+				get_AA_data((char *)data);
+				memset(data,0,datalen);
+				LPUART1_RX_STA = 0;		
+				PWR12V_ON
+				HAL_Delay(5000);
+				read_SW();
+				Control(&User_Data,10);
+				memset(main_buff1, 0, sizeof(main_buff1));
+				main_len = sprintf(main_buff1, "BA,%s,OK,%d", User_Data.imei, User_Data.csq);
+				MQTT_PublishQs0(main_buff1,main_len);
 			}
 			else;			
 	}	
@@ -489,6 +542,131 @@ void get_A4_data(char *data)
   {
     Error_Handler();
   }
+}
+void get_A7_data(char *data)
+{
+	char *token;
+	char *dataString;
+	uint8_t i=0;
+	// 找到第四个双引号后的数据部分
+	token = strtok(data, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	dataString = token;
+
+	// 使用逗号作为分隔符来提取数据
+	token = strtok(dataString, ",");
+	while (token != NULL) {
+			i++;
+			printf("token%d=%s\r\n",i,token);
+			switch(i)
+			{
+				case 3:
+					User_Data.Switch_Type1=atoi(token);
+
+					break;
+			
+				default:
+					break;
+			
+			}
+			token = strtok(NULL, ",");
+	}
+}
+
+void get_A8_data(char *data)
+{
+	char *token;
+	char *dataString;
+	uint8_t i=0;
+	// 找到第四个双引号后的数据部分
+	token = strtok(data, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	dataString = token;
+
+	// 使用逗号作为分隔符来提取数据
+	token = strtok(dataString, ",");
+	while (token != NULL) {
+			i++;
+			printf("token%d=%s\r\n",i,token);
+			switch(i)
+			{
+				case 3:
+					User_Data.Switch_Type2=atoi(token);
+
+					break;
+			
+				default:
+					break;
+			
+			}
+			token = strtok(NULL, ",");
+	}
+}
+void get_A9_data(char *data)
+{
+	char *token;
+	char *dataString;
+	uint8_t i=0;
+	// 找到第四个双引号后的数据部分
+	token = strtok(data, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	dataString = token;
+
+	// 使用逗号作为分隔符来提取数据
+	token = strtok(dataString, ",");
+	while (token != NULL) {
+			i++;
+			printf("token%d=%s\r\n",i,token);
+			switch(i)
+			{
+				case 3:
+					User_Data.Butterfly_Type=atoi(token);
+
+					break;
+			
+				default:
+					break;
+			
+			}
+			token = strtok(NULL, ",");
+	}
+}
+void get_AA_data(char *data)
+{
+	char *token;
+	char *dataString;
+	uint8_t i=0;
+	// 找到第四个双引号后的数据部分
+	token = strtok(data, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	token = strtok(NULL, "\"");
+	dataString = token;
+
+	// 使用逗号作为分隔符来提取数据
+	token = strtok(dataString, ",");
+	while (token != NULL) {
+			i++;
+			printf("token%d=%s\r\n",i,token);
+			switch(i)
+			{
+				case 3:
+					User_Data.motor_Type=atoi(token);
+
+					break;
+			
+				default:
+					break;
+			
+			}
+			token = strtok(NULL, ",");
+	}
 }
 
 void set_date_and_time(char *data) {

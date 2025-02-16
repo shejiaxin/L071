@@ -41,3 +41,16 @@ f071\dma.o: ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h
 f071\dma.o: ../Core/Inc/usart.h
 f071\dma.o: E:\Keil\ARM\ARMCC\Bin\..\include\stdio.h
 f071\dma.o: E:\Keil\ARM\ARMCC\Bin\..\include\string.h
+f071\dma.o: ..\MDK-ARM\include.h
+f071\dma.o: ..\User\lora\lora.h
+f071\dma.o: ../Core/Inc/rtc.h
+f071\dma.o: ../Core/Inc/tim.h
+f071\dma.o: ..\User\user_iic\user_iic.h
+f071\dma.o: ..\MDK-ARM\include.h
+f071\dma.o: ../Core/Inc/i2c.h
+f071\dma.o: ..\User\ec800\ec800.h
+f071\dma.o: ..\User\ec800\ConfigModuleNoBlock.h
+f071\dma.o: ..\User\ec800\control.h
+f071\dma.o: ..\User\modbus_crc\modbus_crc.h
+f071\dma.o: ..\User\stop\stop.h
+f071\dma.o: ..\User\user_usart\user_usart.h

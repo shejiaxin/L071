@@ -6,7 +6,7 @@
 
 void LoRa_GetData(LoRaParameter LoRa)
 {	         			           	                                
-	printf("模块地址:0x%02X\r\n",LoRa.LoRa_AddrL + (LoRa.LoRa_AddrH << 8) );                //串口输出信息
+	printf("\r\n模块地址:0x%02X\r\n",LoRa.LoRa_AddrL + (LoRa.LoRa_AddrH << 8) );                //串口输出信息
 	switch(LoRa.LoRa_UartMode){                                                //判断串口参数
 		case LoRa_8N1 :	 printf("8数据位 无校验 1停止位\r\n");        //串口输出信息
 						 break;                                          //跳出
@@ -107,7 +107,7 @@ void parse_pair(char* pair,MqttParams *params) {
         strncpy(params->Sub_Topics1, value, sizeof(params->Sub_Topics1) - 1);
     }
 	else;
-	mcu_eeprom_write(41, (uint8_t*)&params, sizeof(params));
+	
 }
 
 int parsecmd(char *data) {
@@ -123,8 +123,18 @@ int parsecmd(char *data) {
     for (int i = 0; i < pair_count; i++) {
         parse_pair(pairs[i],&Mqtt_params);
     }
-
-    return 1;
+		if(		 Mqtt_params.Mqtt_ip[0] != '\0' &&
+           Mqtt_params.Mqtt_port != 0 &&
+           Mqtt_params.Mqtt_client_id[0] != '\0' &&
+           Mqtt_params.Mqtt_user_name[0] != '\0' &&
+           Mqtt_params.Mqtt_password[0] != '\0' &&
+           Mqtt_params.Sub_Topics[0] != '\0' &&
+           Mqtt_params.Sub_Topics1[0] != '\0'){
+					mcu_eeprom_write(41, (uint8_t*)&Mqtt_params, sizeof(Mqtt_params));
+					return 1;
+				}
+		else
+					return 0;
 }
 
 /*-------------------------------------------------*/
@@ -192,7 +202,10 @@ void U1PassiveEvent(uint8_t *data, uint16_t datalen)
 				break;
 			case 'M':
 				/*Mqtt_ip=81.70.28.130,Mqtt_port=1883,Mqtt_client_id=stm32,Mqtt_user_name=pub,Mqtt_password=Publish123456,Sub_Topics=P000005/D000476/report,Sub_Topics1=P000005/D000476/command*/
-				parsecmd((char *)data);			
+				if(parsecmd((char *)data))
+						printf("\r\nMqtt数据设置成功\r\n")	;
+				else
+						printf("\r\nMqtt数据设置失败\r\n")	;
 				break;
 			case 0xB1:
 				Motor_OFF

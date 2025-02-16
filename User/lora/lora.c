@@ -79,9 +79,9 @@ void LoRa_Init(void)
 	HAL_Delay(5000);
 	read_SW();
 	memset(main_buff1,0,sizeof(main_buff1));
-	main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+	main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
 		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
-		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
+		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,LoRaNet.LoRa_CH,User_Data.lora_rssi);
 	HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 	
 	PWR12V_OFF
@@ -257,9 +257,9 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 		HAL_Delay(5000);
 		read_SW();
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+		main_len=sprintf(main_buff1,"B5,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
 		User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
-		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.lora_rssi);
+		GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,LoRaNet.LoRa_CH,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 		HAL_Delay(100);
 		PWR12V_OFF
@@ -267,66 +267,81 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 	}
 	else if(strstr((char *)data,"A1")&&((LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8))  == User_Data.lora_id)){
 		lora_get_A1_data((char *)data);
+		PWR12V_ON
+		HAL_Delay(5000);
+		read_SW();
 		Control(&User_Data,1);
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B1,%d,OK,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.lora_rssi);
+		main_len=sprintf(main_buff1,"B1,%d,OK,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 	}
 	else if(strstr((char *)data,"A2")&&((LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8))== User_Data.lora_id)){
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B2,%d,OK,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.lora_rssi);
+		main_len=sprintf(main_buff1,"B2,%d,OK,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 		lora_enter_stop_rtc_mode(User_Data.Wake_time);
 	}
 	else if(strstr((char *)data,"A3")&&((LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8))  == User_Data.lora_id)){
 		lora_get_A3_data((char *)LPUART1_Data);
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B3,%d,OK,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.lora_rssi);
+		main_len=sprintf(main_buff1,"B3,%d,OK,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 	
 	}
 	else if(strstr((char *)data,"A4")&&((LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8))  == User_Data.lora_id)){
 		lora_get_A4_data((char *)LPUART1_Data);
 		memset(main_buff1,0,sizeof(main_buff1));
-		main_len=sprintf(main_buff1,"B4,%d,OK,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),User_Data.lora_rssi);
+		main_len=sprintf(main_buff1,"B4,%d,OK,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 
 	}
 	else if (strstr((char *)data, "A7") && ((LoRaNet.LoRa_AddrL + (LoRaNet.LoRa_AddrH << 8)) == User_Data.lora_id)) {
     char *token = strtok((char *)data, ",");
     token = strtok(NULL, ","); // 提取状态值
+		token = strtok(NULL, ",");
 		if (token != NULL) {
 			int state = atoi(token);
-			User_Data.Switch_Type1 = (state != 0) ? 1 : 0; // 更新目标状态
+			User_Data.Switch_Type1 = state ; // 更新目标状态
+			PWR12V_ON
+			HAL_Delay(5000);
+			read_SW();
 			Control(&User_Data, 7); // 调用 Control，传入控制类型 7
 			// 发送响应 B7,<实际状态>,OK
 			memset(main_buff1, 0, sizeof(main_buff1));
-			main_len = sprintf(main_buff1, "B7,%d,OK,%d", User_Data.RW_Switch_Type1, User_Data.lora_rssi);
+			main_len = sprintf(main_buff1, "B7,%d,OK,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)), LoRaNet.LoRa_CH,User_Data.lora_rssi);
 			HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);
 		}
 	}
 	else if(strstr((char *)data, "A8") && ((LoRaNet.LoRa_AddrL + (LoRaNet.LoRa_AddrH << 8)) == User_Data.lora_id)){
 		char *token = strtok((char *)data, ",");
 		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
 		if(token != NULL) {
 			int state = atoi(token);
-			User_Data.Switch_Type2 = (state != 0) ? 1 : 0;
+			User_Data.Switch_Type2 = state ;
+			PWR12V_ON
+			HAL_Delay(5000);
+			read_SW();
 			Control(&User_Data,8);
 			memset(main_buff1, 0, sizeof(main_buff1));
-			main_len = sprintf(main_buff1, "B8,%d,OK,%d", User_Data.RW_Switch_Type2, User_Data.lora_rssi);
+			main_len = sprintf(main_buff1, "B8,%d,OK,%d,%d", (LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH, User_Data.lora_rssi);
 			HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);
 		}
 	}
 	else if(strstr((char *)data, "A9") && ((LoRaNet.LoRa_AddrL + (LoRaNet.LoRa_AddrH << 8)) == User_Data.lora_id)) {
 		char *token = strtok((char *)data, ",");
 		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
 		if(token != NULL) {
 			int value = atoi(token);
 			if(value >=0 && value <=90) { // 确保角度合法
 				User_Data.Butterfly_Type = value; // 直接设置目标值
+				PWR12V_ON
+				HAL_Delay(5000);
+				read_SW();
 				Control(&User_Data,9);
 				memset(main_buff1, 0, sizeof(main_buff1));
-				main_len = sprintf(main_buff1, "B9,%d,OK,%d", User_Data.RW_Butterfly_Type, User_Data.lora_rssi);
+				main_len = sprintf(main_buff1, "B9,%d,OK,%d,%d", (LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH, User_Data.lora_rssi);
 				HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);
 			}
 		}
@@ -334,13 +349,17 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 	else if(strstr((char *)data, "AA") && ((LoRaNet.LoRa_AddrL + (LoRaNet.LoRa_AddrH << 8)) == User_Data.lora_id)) {
 		char *token = strtok((char *)data, ",");
 		token = strtok(NULL, ",");
+		token = strtok(NULL, ",");
 		if(token != NULL) {
 			int angle = atoi(token);
 			if(angle >=0 && angle <=180) { // 确保角度合法
 				User_Data.motor_Type = angle; // 设置目标角度
-				Control(&User_Data,20);
+				PWR12V_ON
+				HAL_Delay(5000);
+				read_SW();
+				Control(&User_Data,10);
 				memset(main_buff1, 0, sizeof(main_buff1));
-				main_len = sprintf(main_buff1, "BA,%d,OK,%d", User_Data.RW_motor_Type, User_Data.lora_rssi);
+				main_len = sprintf(main_buff1, "BA,%d,OK,%d,%d", (LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH, User_Data.lora_rssi);
 				HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);
 			}
 		}
