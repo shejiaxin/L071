@@ -354,7 +354,7 @@ ARM Macro Assembler    Page 6
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M0+ --apcs=inter
 work --depend=f071\startup_stm32l071xx.d -of071\startup_stm32l071xx.o -I.\RTE\_
-F071 -IE:\Keil\Packs\ARM\CMSIS\5.8.0\CMSIS\Core\Include -IE:\Keil\Packs\Keil\ST
+F071 -ID:\Keil\Packs\ARM\CMSIS\5.8.0\CMSIS\Core\Include -ID:\Keil\Packs\Keil\ST
 M32L0xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32L0xx\Include --predefine="__MICR
 OLIB SETA 1" --predefine="__UVISION_VERSION SETA 536" --predefine="_RTE_ SETA 1
 " --predefine="STM32L071xx SETA 1" --predefine="_RTE_ SETA 1" --list=startup_st

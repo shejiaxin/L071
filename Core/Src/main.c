@@ -117,7 +117,17 @@ int main(void)
 	
 	//GetSystemClocks();
 	IO1_OFF
-
+	HAL_GPIO_TogglePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin);
+	HAL_Delay(200);
+	HAL_GPIO_TogglePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin);
+	HAL_Delay(200);
+	HAL_GPIO_TogglePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin);
+	HAL_Delay(200);
+	HAL_GPIO_TogglePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin);
+	HAL_Delay(200);
+	HAL_GPIO_TogglePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin);
+	HAL_Delay(200);
+	HAL_GPIO_TogglePin(ALarm_LED_GPIO_Port,ALarm_LED_Pin);
 //	PWR18V_ON
 //	PWR12V_ON
 
