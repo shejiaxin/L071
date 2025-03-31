@@ -100,13 +100,13 @@ static void delay1(unsigned int n)
 void I2CStart(void)
 {
     SDA_Output(1);
-    delay1(DELAY_TIME);
+//    delay1(DELAY_TIME);
     SCL_Output(1);
     delay1(DELAY_TIME);
     SDA_Output(0);
     delay1(DELAY_TIME);
     SCL_Output(0);
-    delay1(DELAY_TIME);
+//    delay1(DELAY_TIME);
 }
  
 /**
@@ -117,13 +117,13 @@ void I2CStart(void)
 void I2CStop(void)
 {
     SCL_Output(0);
-    delay1(DELAY_TIME);
+//    delay1(DELAY_TIME);
     SDA_Output(0);
     delay1(DELAY_TIME);
     SCL_Output(1);
-    delay1(DELAY_TIME);
+//    delay1(DELAY_TIME);
     SDA_Output(1);
-    delay1(DELAY_TIME);
+//    delay1(DELAY_TIME);
  
 }
  
@@ -134,26 +134,34 @@ void I2CStop(void)
   */
 unsigned char I2CWaitAck(void)
 {
-    unsigned short cErrTime = 5;
-    SDA_Input_Mode();
-    delay1(DELAY_TIME);
+	  SDA_Output(1);
     SCL_Output(1);
     delay1(DELAY_TIME);
-    while(SDA_Input())
-    {
-        cErrTime--;
-        delay1(DELAY_TIME);
-        if (0 == cErrTime)
-        {
-            SDA_Output_Mode();
-            I2CStop();
-            return ERROR;
-        }
-    }
-    SDA_Output_Mode();
+		SDA_Input_Mode();
+    uint8_t ack = SDA_Input();
     SCL_Output(0);
-    delay1(DELAY_TIME);
-    return SUCCESS;
+		SDA_Output_Mode();
+    return ack;
+//    unsigned short cErrTime = 5;
+//    SDA_Input_Mode();
+//    delay1(DELAY_TIME);
+//    SCL_Output(1);
+//    delay1(DELAY_TIME);
+//    while(SDA_Input())
+//    {
+//        cErrTime--;
+//        delay1(DELAY_TIME);
+//        if (0 == cErrTime)
+//        {
+//            SDA_Output_Mode();
+//            I2CStop();
+//            return ERROR;
+//        }
+//    }
+//    SDA_Output_Mode();
+//    SCL_Output(0);
+//    delay1(DELAY_TIME);
+//    return SUCCESS;
 }
  
 /**
@@ -163,13 +171,17 @@ unsigned char I2CWaitAck(void)
   */
 void I2CSendAck(void)
 {
-    SDA_Output(0);
-    delay1(DELAY_TIME);
-    delay1(DELAY_TIME);
+	  SDA_Output(0);
     SCL_Output(1);
     delay1(DELAY_TIME);
     SCL_Output(0);
-    delay1(DELAY_TIME);
+//    SDA_Output(0);
+//    delay1(DELAY_TIME);
+//    delay1(DELAY_TIME);
+//    SCL_Output(1);
+//    delay1(DELAY_TIME);
+//    SCL_Output(0);
+//    delay1(DELAY_TIME);
  
 }
  
@@ -180,14 +192,17 @@ void I2CSendAck(void)
   */
 void I2CSendNotAck(void)
 {
-    SDA_Output(1);
-    delay1(DELAY_TIME);
-    delay1(DELAY_TIME);
+	  SDA_Output(1);
     SCL_Output(1);
     delay1(DELAY_TIME);
     SCL_Output(0);
-    delay1(DELAY_TIME);
- 
+//    SDA_Output(1);
+//    delay1(DELAY_TIME);
+//    delay1(DELAY_TIME);
+//    SCL_Output(1);
+//    delay1(DELAY_TIME);
+//    SCL_Output(0);
+//    delay1(DELAY_TIME);
 }
  
 /**
@@ -197,20 +212,31 @@ void I2CSendNotAck(void)
   */
 void I2CSendByte(unsigned char cSendByte)
 {
-    unsigned char  i = 8;
-    while (i--)
-    {
-        SCL_Output(0);
-        delay1(DELAY_TIME);
-        SDA_Output(cSendByte & 0x80);
-        delay1(DELAY_TIME);
-        cSendByte += cSendByte;
-        delay1(DELAY_TIME);
-        SCL_Output(1);
-        delay1(DELAY_TIME);
+	  for (uint8_t i = 0; i < 8; i++) {
+			if (cSendByte & 0x80)
+					SDA_Output(1);
+			else
+					SDA_Output(0);
+			delay1(DELAY_TIME);
+			SCL_Output(1);
+			delay1(DELAY_TIME);
+			SCL_Output(0);
+			cSendByte <<= 1;
     }
-    SCL_Output(0);
-    delay1(DELAY_TIME);
+//    unsigned char  i = 8;
+//    while (i--)
+//    {
+//        SCL_Output(0);
+//        delay1(DELAY_TIME);
+//        SDA_Output(cSendByte & 0x80);
+//        delay1(DELAY_TIME);
+//        cSendByte += cSendByte;
+//        delay1(DELAY_TIME);
+//        SCL_Output(1);
+//        delay1(DELAY_TIME);
+//    }
+//    SCL_Output(0);
+//    delay1(DELAY_TIME);
 }
  
 /**
@@ -220,23 +246,37 @@ void I2CSendByte(unsigned char cSendByte)
   */
 unsigned char I2CReceiveByte(void)
 {
-    unsigned char i = 8;
-    unsigned char cR_Byte = 0;
-    SDA_Input_Mode();
-    while (i--)
-    {
-        cR_Byte += cR_Byte;
-        SCL_Output(0);
-        delay1(DELAY_TIME);
-        delay1(DELAY_TIME);
+	  uint8_t byte = 0;
+    SDA_Output(1);  // 释放 SDA
+	  SDA_Input_Mode();
+    for (uint8_t i = 0; i < 8; i++) {
+        byte <<= 1;
         SCL_Output(1);
         delay1(DELAY_TIME);
-        cR_Byte |=  SDA_Input();
+        if (SDA_Input())
+            byte |= 0x01;
+        SCL_Output(0);
+        delay1(DELAY_TIME);
     }
-    SCL_Output(0);
-    delay1(DELAY_TIME);
-    SDA_Output_Mode();
-    return cR_Byte;
+		SDA_Output_Mode();
+    return byte;
+//    unsigned char i = 8;
+//    unsigned char cR_Byte = 0;
+//    SDA_Input_Mode();
+//    while (i--)
+//    {
+//        cR_Byte += cR_Byte;
+//        SCL_Output(0);
+//        delay1(DELAY_TIME);
+//        delay1(DELAY_TIME);
+//        SCL_Output(1);
+//        delay1(DELAY_TIME);
+//        cR_Byte |=  SDA_Input();
+//    }
+//    SCL_Output(0);
+//    delay1(DELAY_TIME);
+//    SDA_Output_Mode();
+//    return cR_Byte;
 }
  
 
@@ -300,6 +340,172 @@ float READ_MCP3421(void)
  }
 
 
+ uint8_t CW2015_WriteReg(uint8_t reg, uint8_t data) {
+    I2CStart();
+    I2CSendByte(WRITE_CW2015); // 写入模式
+		if (I2CWaitAck()) {
+			I2CStop();
+			return 0xFF;
+    }
+    I2CSendByte(reg);
+		if (I2CWaitAck()) {
+			I2CStop();
+			return 0xFF;
+    }
+    I2CSendByte(data);
+		if (I2CWaitAck()) {
+			I2CStop();
+			return 0xFF;
+    }
+		I2CSendNotAck();
+    I2CStop();
+}
+ 
+uint8_t CW2015_ReadReg(uint8_t reg) {
+    uint8_t data = 0;
+    I2CStart();
+    I2CSendByte(WRITE_CW2015); // 写入模式
+	  if (I2CWaitAck()) {
+			I2CStop();
+			return 0xFF;
+    }
+    I2CSendByte(reg);
+		if (I2CWaitAck()) {
+			I2CStop();
+			return 0xFF;
+    }
+    I2CStart();                     // 重复起始条件
+    I2CSendByte(READ_CW2015); // 读取模式		
+		if (I2CWaitAck()) {
+			I2CStop();
+			return 0xFF;
+    }
+    data = I2CReceiveByte();          // 最后字节发送NACK
+		I2CSendNotAck();
+    I2CStop();
+    return data;
+}
+ 
+ /*这个函数的作用是更新ic内的电池profile信息，一般只有在ic VDD掉电后再上电时才执行 */
+unsigned char cw_update_config_info(void)
+{
+	uint8_t ret = 0;
+	unsigned char i;
+	unsigned char reset_val;
+	unsigned char reg_val;
+	/* make sure no in sleep mode */
+//	reg_val = CW2015_ReadReg(REG_MODE);
+
+//	if((reg_val & MODE_SLEEP_MASK) == MODE_SLEEP)
+//	{
+//		return 2;
+//	}
+	/* update new battery info */
+	for(i = 0; i < SIZE_BATINFO; i++)
+	{
+		reg_val = cw_bat_config_info[i];
+		CW2015_WriteReg(REG_BATINFO+i, reg_val);
+	}
+ 
+	/* readback & check */
+	for(i = 0; i < SIZE_BATINFO; i++)
+	{
+	  reg_val = CW2015_ReadReg(REG_BATINFO+i);
+		/* debug_log("[cw_update]: REG[%02X] = %02X", REG_BATINFO +i, reg_val); */
+		if(reg_val != cw_bat_config_info[i])
+		{
+			return 3;
+		}
+	}
+	/* set cw2015/cw2013 to use new battery info */
+	reg_val = CW2015_ReadReg(REG_CONFIG);
+
+	reg_val |= CONFIG_UPDATE_FLG;   /* set UPDATE_FLAG */
+	reg_val &= 0x07;                /* clear ATHD */
+	reg_val |= ATHD;                /* set ATHD */
+  CW2015_WriteReg(REG_CONFIG, reg_val);
+
+	/* reset */
+	reset_val = MODE_NORMAL;
+	reg_val = MODE_RESTART;
+	CW2015_WriteReg(REG_MODE, reg_val);
+
+	HAL_Delay(10);  //delay 100us      
+  CW2015_WriteReg(REG_MODE, reset_val);
+	return 0;
+}
+ 
+/*电量计初始化函数 每次开机后要执行*/
+unsigned char cw_init(void)
+{
+	unsigned ret;
+	unsigned char i;
+	unsigned char reg_val = MODE_NORMAL;
+	
+	/* wake up cw2015/13 from sleep mode */
+  CW2015_WriteReg(REG_MODE, reg_val);
+	/* check ATHD if not right */
+	reg_val = CW2015_ReadReg(REG_CONFIG);
+
+	if((reg_val & 0xf8) != ATHD)
+	{
+		//"the new ATHD need set"
+		reg_val &= 0x07;    /* clear ATHD */
+		reg_val |= ATHD;    /* set ATHD */
+		CW2015_WriteReg(REG_CONFIG,reg_val);
+	}
+	
+	/* check config_update_flag if not right */
+	reg_val = CW2015_ReadReg(REG_CONFIG);
+
+	if(!(reg_val & CONFIG_UPDATE_FLG))
+	{
+		//"update flag for new battery info need set"
+		ret = cw_update_config_info();
+		if(ret)
+		{
+			return ret;
+		}
+	}
+	else
+	{
+		for(i = 0; i < SIZE_BATINFO; i++)
+		{ 
+			reg_val = CW2015_ReadReg(REG_BATINFO +i);
+			 printf("[cw_init]:REG[%02X] = %02X", REG_BATINFO +i, reg_val); 
+			if(cw_bat_config_info[i] != reg_val)
+			{
+				break;
+			}
+		}
+		if(i != SIZE_BATINFO)
+		{
+			//"update flag for new battery info need set"
+			ret = cw_update_config_info();
+		}
+	}
+	HAL_Delay(1000);
+	/* check SOC if not eqaul 255 */
+	for (i = 0; i < 30; i++) {
+		HAL_Delay(10);//delay 100ms
+		reg_val = CW2015_ReadReg(REG_SOC);
+
+		if (reg_val <= 100) 
+			break;		
+    }
+	
+    if (i >=30){
+        reg_val = MODE_SLEEP;
+        CW2015_WriteReg(REG_MODE, reg_val);
+				printf("cw2015/cw2013 input unvalid power error_2\n");
+        // "cw2015/cw2013 input unvalid power error_2\n";
+        return 4;
+    } 
+	return 0;
+}
+ 
+ 
+ 
 /*********************************************************************
  * PUBLIC FUNCTIONS
  */
@@ -327,16 +533,19 @@ void MCP3421_Init(void)
 	uint8_t parameter = 0x9c; //系统参数配置为18位精度，自动转换模式，无PGA增益。配置字见数据手册。
 	IIC_NCA_RESET_ON
 	for(uint8_t i =0; i<3;i++){
-		TCA9548A_SetChannel(i);
+				TCA9548A_SetChannel(i);
 		Write_MCP3421(parameter);
 		HAL_Delay(10);
 	}
+	TCA9548A_SetChannel(3);
+	cw_init();
 }
 
 void MCP3421_Read(void)
 {
-	for(uint8_t i =0; i<3;i++){
+	for(uint8_t i =0; i<4;i++){	
 		TCA9548A_SetChannel(i);
+		HAL_Delay(1);
     switch (i)
     {
     case  0:
@@ -348,9 +557,14 @@ void MCP3421_Read(void)
     case  2:
       User_Data.Pressure3 = READ_MCP3421();
       break;
+		case  3:
+			User_Data.cw_capacity = CW2015_ReadReg(REG_SOC);
+			User_Data.cw_capacity1 = CW2015_ReadReg(REG_SOC+1);
+			User_Data.voltage = CW2015_ReadReg(REG_VCELL)<<8;
+			User_Data.voltage += CW2015_ReadReg(REG_VCELL+1);
+			User_Data.voltage = User_Data.voltage*304/1000;
     default:
       break;
-    }
-    HAL_Delay(10);
+    } 
 	}
 }

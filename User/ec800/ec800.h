@@ -78,6 +78,9 @@ typedef struct
 	uint16_t motor_180_val; //顺时针 -90°的ADC标定电压
 	
  	uint16_t adc;
+	uint16_t cw_capacity;
+	uint16_t cw_capacity1;
+	uint16_t voltage;
 	uint32_t Wake_time;	
 	uint32_t uuid[3];
 	char imei[16];
@@ -88,6 +91,13 @@ typedef struct
 	uint16_t lora_id;
 	uint16_t lora_rssi;
 } DATA;
+
+// 定义一个结构体来存储解析后的ID和指令
+typedef struct Command {
+    char id[16];           // ID是15个字符加上结束符
+    char raw_command[256]; // 存储整个原始指令字符串
+} Command;
+
 
 extern DATA User_Data;
 extern MqttParams Mqtt_params;

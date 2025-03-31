@@ -36,6 +36,11 @@ uint16_t main_len;
 
 DATA User_Data;
 
+#define COMMAND_PREFIX "+QMTRECV: 0,0,"    //接收的服务器数据头
+#define MAX_COMMANDS 10          // 最多存储10条指令
+Command commands[MAX_COMMANDS]; 
+uint8_t command_count = 0;
+
 void UART_Clear(void)
 {
 	memset(LPUART1_Data, 0, sizeof(LPUART1_Data));
@@ -215,6 +220,70 @@ void EC20_Init(void)
 		HAL_Delay(100);
 }
 
+// 解析从start到end的字符串，并提取ID和原始指令
+Command parseCommand(const char *start, const char *end) {
+    Command result = {0};
+    const char *id_start;
+    const char *id_end;
+
+    // 查找ID开始的位置
+   id_start = strchr(start, 'A'); // 假设ID总是跟在'A'之后
+    if (id_start != NULL) {
+        id_start += 3; // 跳过'A'
+        // 查找ID结束的位置
+        id_end = strchr(id_start, ',');
+        if (id_end != NULL && id_end < end) {
+            // 提取ID
+            size_t id_len = id_end - id_start;
+            if (id_len < sizeof(result.id)) {
+                strncpy(result.id, id_start, id_len);
+                result.id[id_len] = '\0'; // 确保字符串以null结束
+            }
+        }
+    }
+
+    // 提取整个原始指令字符串
+    size_t command_len = end - start;
+    if (command_len < sizeof(result.raw_command)) {
+        strncpy(result.raw_command, start, command_len);
+        result.raw_command[command_len] = '\0'; // 确保字符串以null结束
+    }
+
+    return result;
+}
+
+// 从buffer中解析所有指令并存储符合条件的指令
+void processCommands(const char *buffer, Command commands[], uint8_t *command_count) {
+    const char *command_start = buffer;
+    const char *command_end;
+
+    // 循环处理每个COMMAND_PREFIX指令
+    while ((command_start = strstr(command_start, COMMAND_PREFIX)) != NULL) {
+        // 移动指针到COMMAND_PREFIX之后
+        command_start += strlen(COMMAND_PREFIX);
+        // 查找指令的结束位置
+        command_end = strstr(command_start, COMMAND_PREFIX);
+        if (command_end == NULL) {
+            // 如果没有找到下一个COMMAND_PREFIX，那么这是最后一个指令
+            command_end = command_start + strlen(command_start);
+        }
+
+        // 解析指令并获取结果
+        Command cmd = parseCommand(command_start, command_end);
+
+        // 判断是否是自己的ID
+        if (strcmp(cmd.id, (char *)User_Data.imei) == 0) {
+            // 如果是自己的ID，将整个原始指令字符串存入commands数组
+            if (*command_count < MAX_COMMANDS) {
+                commands[*command_count] = cmd;
+                (*command_count)++;
+            }
+        }
+        // 移动到下一个指令的开始位置
+        command_start = command_end;
+    }
+}
+
 /*-------------------------------------------------*/
 /*函数名：LPUART1被动事件                            */
 /*参  数：data ：数据                              */
@@ -223,128 +292,149 @@ void EC20_Init(void)
 /*-------------------------------------------------*/
 void U3PassiveEvent(uint8_t *data, uint16_t datalen)
 { 
-		printf("4GSever_数据 %s\r\n",data);
-		if(strstr((char *)data,"+QMTRECV: 0,0")&&strstr((char *)data,(char *)User_Data.imei)){				
+		printf("4GSever_数据 %s 长度%d\r\n",data,datalen);
+//		if(strstr((char *)data,"+QMTRECV: 0,0")&&strstr((char *)data,(char *)User_Data.imei))
+		processCommands((char *)data, commands, &command_count);
+		// 检查是否有符合条件的指令
+		if (command_count > 0) {
+				printf("开始处理符合条件的指令:\n");
+				for (int i = 0; i < command_count; i++) {
+						// 假设这里是处理指令的逻辑
+						printf("正在处理指令 %d: %s\n", i + 1, commands[i].raw_command);			
+						if(strstr((char *)commands[i].raw_command,"A5")){
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							AT_CMD("AT+CSQ\r\n","OK",1000);
+							RTC_Time();					
+							PWR12V_ON
+							HAL_Delay(5000);
+							read_SW();
+							memset(main_buff1,0,sizeof(main_buff1));
+							main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
+							User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
+							GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);	
+							PWR12V_OFF
+							HAL_Delay(100);
+						}
+						else if(strstr((char *)data,"A1")){
+							get_A1_data((char *)data);
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							AT_CMD("AT+CSQ\r\n","OK",1000);
+							PWR12V_ON
+							HAL_Delay(5000);
+							read_SW();
+							Control(&User_Data,1);
+							memset(main_buff1,0,sizeof(main_buff1));
+							main_len=sprintf(main_buff1,"B1,%s,OK,%d",User_Data.imei,User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
+						}
+						else if(strstr((char *)data,"A2")){
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							AT_CMD("AT+CSQ\r\n","OK",1000);
+							memset(main_buff1,0,sizeof(main_buff1));
+							main_len=sprintf(main_buff1,"B2,%s,OK,%d",User_Data.imei,User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
+							enter_stop_rtc_mode(User_Data.Wake_time);
+						}
+						else if(strstr((char *)data,"A3")){
+							get_A3_data((char *)data);
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							AT_CMD("AT+CSQ\r\n","OK",1000);			
+							memset(main_buff1,0,sizeof(main_buff1));	
+							main_len=sprintf(main_buff1,"B3,%s,OK,%d",User_Data.imei,User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
+						
+						}
+						else if(strstr((char *)data,"A4")){
+							get_A4_data((char *)data);
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							AT_CMD("AT+CSQ\r\n","OK",1000);
+							memset(main_buff1,0,sizeof(main_buff1));
+							main_len=sprintf(main_buff1,"B4,%s,OK,%d",User_Data.imei,User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
 
-			if(strstr((char *)data,"A5")){
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-				AT_CMD("AT+CSQ\r\n","OK",1000);
-				RTC_Time();					
-				PWR12V_ON
-				HAL_Delay(5000);
-				read_SW();
-				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B5,%s,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%d,%d/%d/%d-%d:%d:%d,%d",User_Data.imei,User_Data.adc,User_Data.RW_Switch_Type1,User_Data.RW_Switch_Type2,
-				User_Data.RW_Double_Type,User_Data.RW_Butterfly_Type,User_Data.RW_motor_Type,User_Data.RW_Pressure1,User_Data.RW_Pressure2,User_Data.Wake_time,
-				GetData.Year, GetData.Month, GetData.Date,GetTime.Hours, GetTime.Minutes, GetTime.Seconds,User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);	
-				PWR12V_OFF
-				HAL_Delay(100);
-			}
-			else if(strstr((char *)data,"A1")&&strstr((char *)data,(char *)User_Data.imei)){
-				get_A1_data((char *)data);
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-			  AT_CMD("AT+CSQ\r\n","OK",1000);
-				PWR12V_ON
-				HAL_Delay(5000);
-				read_SW();
-				Control(&User_Data,1);
-				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B1,%s,OK,%d",User_Data.imei,User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
-			}
-			else if(strstr((char *)data,"A2")&&strstr((char *)data,(char *)User_Data.imei)){
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-				AT_CMD("AT+CSQ\r\n","OK",1000);
-				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B2,%s,OK,%d",User_Data.imei,User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
-				enter_stop_rtc_mode(User_Data.Wake_time);
-			}
-			else if(strstr((char *)data,"A3")&&strstr((char *)data,(char *)User_Data.imei)){
-				get_A3_data((char *)data);
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-			  AT_CMD("AT+CSQ\r\n","OK",1000);			
-				memset(main_buff1,0,sizeof(main_buff1));	
-				main_len=sprintf(main_buff1,"B3,%s,OK,%d",User_Data.imei,User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
-			
-			}
-			else if(strstr((char *)data,"A4")&&strstr((char *)data,(char *)User_Data.imei)){
-				get_A4_data((char *)data);
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-				AT_CMD("AT+CSQ\r\n","OK",1000);
-				memset(main_buff1,0,sizeof(main_buff1));
-				main_len=sprintf(main_buff1,"B4,%s,OK,%d",User_Data.imei,User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
+						}
+						else if(strstr((char *)data,"A6")){				
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							AT_CMD("AT+CSQ\r\n","OK",1000);
+							memset(main_buff1,0,sizeof(main_buff1));		
+							main_len=sprintf(main_buff1,"B6,%s,%.20s,OK,%d",User_Data.imei,User_Data.ICCID,User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
 
-			}
-			else if(strstr((char *)data,"A6")&&strstr((char *)data,(char *)User_Data.imei)){				
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-				AT_CMD("AT+CSQ\r\n","OK",1000);
-				memset(main_buff1,0,sizeof(main_buff1));		
-				main_len=sprintf(main_buff1,"B6,%s,%.20s,OK,%d",User_Data.imei,User_Data.ICCID,User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
+						}
+						else if (strstr((char *)data, "A7") ) {
+							get_A7_data((char *)data);
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							PWR12V_ON
+							HAL_Delay(5000);
+							read_SW();
+							Control(&User_Data, 7); // 调用 Control，传入控制类型 7
+							// 发送响应 B7,<实际状态>,OK
+							memset(main_buff1, 0, sizeof(main_buff1));
+							main_len = sprintf(main_buff1, "B7,%s,OK,%d" ,User_Data.imei, User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
+						}
+						else if(strstr((char *)data, "A8") ){
+							get_A8_data((char *)data);
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;
+							PWR12V_ON
+							HAL_Delay(5000);
+							read_SW();
+							Control(&User_Data,8);
+							memset(main_buff1, 0, sizeof(main_buff1));
+							main_len = sprintf(main_buff1, "B8,%s,OK,%d", User_Data.imei, User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
+							
+						}
+						else if(strstr((char *)data, "A9")) {
+							get_A9_data((char *)data);
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;		
+							PWR12V_ON
+							HAL_Delay(5000);
+							read_SW();			
+							Control(&User_Data,9);
+							memset(main_buff1, 0, sizeof(main_buff1));
+							main_len = sprintf(main_buff1, "B9,%s,OK,%d", User_Data.imei, User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);					
+						}
+						else if(strstr((char *)data, "AA")) {
+							get_AA_data((char *)data);
+							memset(data,0,datalen);
+							LPUART1_RX_STA = 0;		
+							PWR12V_ON
+							HAL_Delay(5000);
+							read_SW();
+							Control(&User_Data,10);
+							memset(main_buff1, 0, sizeof(main_buff1));
+							main_len = sprintf(main_buff1, "BA,%s,OK,%d", User_Data.imei, User_Data.csq);
+							MQTT_PublishQs0(main_buff1,main_len);
+						}
+						else;			
+	
+						// 模拟处理完成后，删除该指令
+						// 将后续指令前移
+						for (int j = i; j < command_count - 1; j++) {
+								commands[j] = commands[j + 1];
+						}
+						
+						// 数组长度减一
+						command_count--;
 
-			}
-			else if (strstr((char *)data, "A7") && strstr((char *)data,(char *)User_Data.imei)) {
-				get_A7_data((char *)data);
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-				PWR12V_ON
-				HAL_Delay(5000);
-				read_SW();
-				Control(&User_Data, 7); // 调用 Control，传入控制类型 7
-				// 发送响应 B7,<实际状态>,OK
-				memset(main_buff1, 0, sizeof(main_buff1));
-				main_len = sprintf(main_buff1, "B7,%s,OK,%d" ,User_Data.imei, User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
-			}
-			else if(strstr((char *)data, "A8") && strstr((char *)data,(char *)User_Data.imei)){
-				get_A8_data((char *)data);
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;
-				PWR12V_ON
-				HAL_Delay(5000);
-				read_SW();
-				Control(&User_Data,8);
-				memset(main_buff1, 0, sizeof(main_buff1));
-				main_len = sprintf(main_buff1, "B8,%s,OK,%d", User_Data.imei, User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
-				
-			}
-			else if(strstr((char *)data, "A9") && strstr((char *)data,(char *)User_Data.imei)) {
-				get_A9_data((char *)data);
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;		
-				PWR12V_ON
-				HAL_Delay(5000);
-				read_SW();			
-				Control(&User_Data,9);
-				memset(main_buff1, 0, sizeof(main_buff1));
-				main_len = sprintf(main_buff1, "B9,%s,OK,%d", User_Data.imei, User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);					
-			}
-			else if(strstr((char *)data, "AA") && strstr((char *)data,(char *)User_Data.imei)) {
-				get_AA_data((char *)data);
-				memset(data,0,datalen);
-				LPUART1_RX_STA = 0;		
-				PWR12V_ON
-				HAL_Delay(5000);
-				read_SW();
-				Control(&User_Data,10);
-				memset(main_buff1, 0, sizeof(main_buff1));
-				main_len = sprintf(main_buff1, "BA,%s,OK,%d", User_Data.imei, User_Data.csq);
-				MQTT_PublishQs0(main_buff1,main_len);
-			}
-			else;			
-	}	
+						// 调整i以重新检查当前位置
+						i--;
+				}
+				printf("所有指令已处理完毕。\n");
+		}
+		
 }
 
 void Secrecy_GetUID(uint32_t * pBuf)

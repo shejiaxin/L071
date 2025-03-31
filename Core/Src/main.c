@@ -193,11 +193,11 @@ int main(void)
 		//if(LPUART1Flag == 1&&EC800_State == 1)  //接收完成并且ec800初始化完成
 		if((LPUART1_RX_STA&0X8000)&&EC800_State == 1)  //接收完成并且ec800初始化完成
 		{
-//			LPUART1Flag = 0;//清除计数
-//			LPUART1Cnt = 0;//清除接收结束标志位
-			U3PassiveEvent(LPUART1_Data,LPUART1_RX_BUFFSIZE);
+			LPUART1Cnt = LPUART1_RX_STA & 0x7FFF;
+			U3PassiveEvent(LPUART1_Data,LPUART1Cnt);
 			memset(LPUART1_Data,0,sizeof(LPUART1_Data));
 			LPUART1_RX_STA = 0;
+			LPUART1Cnt = 0;//清除接收结束标志位
 		}
 		if(Uart2Flag == 1){
 			U2PassiveEvent(Uart2_Data,uart2Cnt);

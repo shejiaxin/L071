@@ -282,14 +282,14 @@ void U2PassiveEvent(uint8_t *data, uint16_t datalen)
 		lora_enter_stop_rtc_mode(User_Data.Wake_time);
 	}
 	else if(strstr((char *)data,"A3")&&((LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8))  == User_Data.lora_id)){
-		lora_get_A3_data((char *)LPUART1_Data);
+		lora_get_A3_data((char *)data);
 		memset(main_buff1,0,sizeof(main_buff1));
 		main_len=sprintf(main_buff1,"B3,%d,OK,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
 	
 	}
 	else if(strstr((char *)data,"A4")&&((LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8))  == User_Data.lora_id)){
-		lora_get_A4_data((char *)LPUART1_Data);
+		lora_get_A4_data((char *)data);
 		memset(main_buff1,0,sizeof(main_buff1));
 		main_len=sprintf(main_buff1,"B4,%d,OK,%d,%d",(LoRaNet.LoRa_AddrL+(LoRaNet.LoRa_AddrH<<8)),LoRaNet.LoRa_CH,User_Data.lora_rssi);
 		HAL_UART_Transmit(&huart2, (uint8_t *)main_buff1, main_len, 0xFF);//发送数据	
@@ -447,13 +447,12 @@ static void lora_get_A4_data(char *data)
 {
 	char *token;
 	char *date_token ;
-	char *dataString;
 	int year, month, day, hour, minute, second;
 	 char date[20];
 
 	// 使用逗号作为分隔符来提取数据
   // 使用 strtok 函数拆分字符串
-    token = strtok(dataString, ",");
+    token = strtok(data, ",");
 		token = strtok(NULL, ",");
 	  token = strtok(NULL, ",");
 		strcpy(User_Data.Time_Data, token);
@@ -524,6 +523,7 @@ static void lora_get_A4_data(char *data)
     printf("Hour: %d\n", hour);
     printf("Minute: %d\n", minute);
     printf("Second: %d\n", second);
+		sDate.WeekDay = 0;  //这里必须要设置星期，否则读取年份不对
   if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
   {
     Error_Handler();
@@ -533,5 +533,8 @@ static void lora_get_A4_data(char *data)
   {
     Error_Handler();
   }
+	
+	
+
 }
 	

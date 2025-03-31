@@ -42,8 +42,8 @@ extern uint8_t Uart1_RxBuff[UART1_RX_BUFFSIZE] ;
 extern uint8_t Uart1_Data[UART1_RX_BUFFSIZE] ;
 extern volatile uint16_t uart1Cnt ;
 
-#define LPUART1_RX_BUFFSIZE     200
-#define LPUART1_MAX_RECV_LEN 200
+#define LPUART1_RX_BUFFSIZE     1000
+#define LPUART1_MAX_RECV_LEN 1000
 extern uint16_t res[1];
 extern uint16_t LPUART1_RX_STA ;
 extern volatile uint8_t LPUART1Flag ;
@@ -52,7 +52,7 @@ extern uint8_t LPUART1_Data[LPUART1_RX_BUFFSIZE] ;
 extern volatile uint16_t LPUART1Cnt ;
 
 
-#define UART2_RX_BUFFSIZE       200
+#define UART2_RX_BUFFSIZE       1000
 extern volatile uint8_t Uart2Flag ;
 extern uint8_t Uart2_RxBuff[UART2_RX_BUFFSIZE] ;
 extern uint8_t Uart2_Data[UART2_RX_BUFFSIZE] ;

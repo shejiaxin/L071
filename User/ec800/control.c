@@ -153,7 +153,8 @@ void read_SW(void)
         .motor_180_val = User_Data.motor_180_val
     };
 		MCP3421_Read();	
-		User_Data.adc =(int)getBatteryLevel(ADC_Values[2]);   //calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
+		//User_Data.adc =(int)getBatteryLevel(ADC_Values[2]);   //calculateBatteryPercentage(ADC_Values[2]/0.364,Mp,SIZE);
+		User_Data.adc = User_Data.cw_capacity;                  //((User_Data.cw_capacity1 * 256 + User_Data.cw_capacity) * 100)/ (100*256);
 		if(IO1_IN==1&&IO2_IN==0){
 			User_Data.RW_Switch_Type1=1;
 		}
@@ -396,6 +397,8 @@ void Motor_Control(void)
 	else if(User_Data.control_state == 0){
 
 		Motor_sleep	
+		FM1_Motor_sleep
+		FM2_Motor_sleep
 		HAL_Delay(10);
 		
 		if(User_Data.control_report_state == 1){
