@@ -74,7 +74,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				 HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)res, 1);    // 使能串口接收中断
        if((LPUART1_RX_STA&(1<<15))==0)//接收完的一批数据,还没有被处理,则不再接收其他数据
 				{ 
-					if(LPUART1_RX_STA<(LPUART1_MAX_RECV_LEN - 1))	//还可以接收数据
+					if(LPUART1_RX_STA<LPUART1_MAX_RECV_LEN)	//还可以接收数据
 					{
 						__HAL_TIM_SET_COUNTER(&htim7,0);//计数器清空          				//计数器清空
 						if(LPUART1_RX_STA==0) 				//使能定时器7的中断 
@@ -82,11 +82,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 							__HAL_TIM_ENABLE(&htim7);//使能定时器7
 						}
 						LPUART1_Data[LPUART1_RX_STA++]=res[0];	//记录接收到的值	 
-						LPUART1_Data[LPUART1_RX_STA]='\0';
 						
 					}else 
 					{
-						LPUART1_Data[LPUART1_MAX_RECV_LEN - 1]='\0';
 						LPUART1_RX_STA|=1<<15;				//强制标记接收完成
 					} 
         //HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)Rxbuf, 40);    // 使能串口接收中断

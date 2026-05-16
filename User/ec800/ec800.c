@@ -44,10 +44,6 @@ static at_t at = {
 
 char type[3], boardID[20];
 void parseReceivedData(char* receivedData) {	
-		if (receivedData == NULL) {
-				log_info("Debug: receivedData is null\n");
-				return;
-		}
     // 去除开头的换行符\r\n
     if (strncmp(receivedData, "\r\n", 2) == 0) {
         receivedData += 2;
@@ -94,12 +90,7 @@ void parseReceivedData(char* receivedData) {
 		// 输出提取的数据
     log_info("Data length: %d\n", dataLength);
     log_info("Command data: %s\n", thirdQuote);
-		memset(type, 0, sizeof(type));
-		memset(boardID, 0, sizeof(boardID));
-		if (sscanf(thirdQuote, "%2[^,],%19[^,]", type, boardID) != 2) {
-				log_info("Debug: Invalid command payload\n");
-				return;
-		}
+		sscanf(thirdQuote, "%[^,],%[^,]", type, boardID);
 		if (strcmp(boardID, (char *)User_Data.imei) != 0) {
 				log_info("Board ID does not match the specific ID %s. Received ID: %s\n", User_Data.imei, boardID); 
         return;  // 如果不匹配，直接返回
@@ -181,7 +172,7 @@ void parseReceivedData(char* receivedData) {
 			main_len = sprintf(main_buff1, "BA,%s,OK,%d", User_Data.imei, User_Data.csq);
 			MQTT_PublishQs0(main_buff1,main_len);
 		}		
-		else if(type[0] == 'D' && type[1] == '8'){
+		else if(type[0] == 'D' && type[0] == '8'){
 			AT_CMD("AT+CSQ\r\n","OK",1000);
 			RTC_Time();					
 			read_SW();
@@ -713,29 +704,19 @@ void get_A4_data(char *data)
 //	token = strtok(NULL, "\"");
 //	token = strtok(NULL, "\"");
 	dataString = token;
-	if (dataString == NULL) {
-		log_info("Error: A4 data is empty!\n");
-		return;
-	}
 	// 使用逗号作为分隔符来提取数据
   // 使用 strtok 函数拆分字符串
     token = strtok(dataString, ",");
     token = strtok(NULL, ",");
 		token = strtok(NULL, ",");
-		if (token == NULL || strlen(token) >= sizeof(User_Data.Time_Data) || strlen(token) >= sizeof(date)) {
-			log_info("Error: Invalid A4 time field!\n");
-			return;
-		}
 		strcpy(User_Data.Time_Data, token);
 		strcpy(date, token);
 		log_info("User_Data.Time_Data=%s\r\n",User_Data.Time_Data);
 		// 提取年月日	
 		date_token = strtok(date, "/-");
-		if (date_token == NULL) { log_info("Error: Invalid A4 year!\n"); return; }
     year = atoi(date_token);
 		sDate.Year=year;
     date_token = strtok(NULL, "/-");
-		if (date_token == NULL) { log_info("Error: Invalid A4 month!\n"); return; }
     month = atoi(date_token);
 		switch(month){
 			case 1:
@@ -778,20 +759,16 @@ void get_A4_data(char *data)
 			break;
 		}
 		date_token = strtok(NULL, "/-"); 
-		if (date_token == NULL) { log_info("Error: Invalid A4 day!\n"); return; }
     day = atoi(date_token);
 		sDate.Date=day;
     // 提取时分秒
     token = strtok(NULL, ":");
-		if (token == NULL) { log_info("Error: Invalid A4 hour!\n"); return; }
     hour = atoi(token);
 		sTime.Hours=hour;
     token = strtok(NULL, ":");
-		if (token == NULL) { log_info("Error: Invalid A4 minute!\n"); return; }
     minute = atoi(token);
 		sTime.Minutes = minute;
     token = strtok(NULL, ":");
-		if (token == NULL) { log_info("Error: Invalid A4 second!\n"); return; }
     second = atoi(token);
 		sTime.Seconds = second;
 		log_info("Year: %d\n", year);
@@ -990,3 +967,5 @@ void set_date_and_time(char *data) {
         Error_Handler();
     }
 }
+
+	
