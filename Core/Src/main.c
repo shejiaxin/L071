@@ -156,6 +156,11 @@ int main(void)
 		if(LPUART1_RX_STA&0X8000)
 		{
 			LPUART1Cnt = LPUART1_RX_STA & 0x7FFF;
+			if(LPUART1Cnt >= sizeof(LPUART1_Data)){
+				LPUART1_Data[sizeof(LPUART1_Data) - 1] = '\0';
+			}else{
+				LPUART1_Data[LPUART1Cnt] = '\0';
+			}
 			log_info("4GSever_数据 %s 长度%d\r\n",LPUART1_Data,LPUART1Cnt);
 			
 			//可以在这里判断模组返回的数据有没有问题
