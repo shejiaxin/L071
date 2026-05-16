@@ -1,0 +1,30 @@
+# Keil / ARM build outputs
+MDK-ARM/F071/
+MDK-ARM/*.map
+MDK-ARM/*.lst
+MDK-ARM/*.bin
+MDK-ARM/*.hex
+MDK-ARM/*.axf
+MDK-ARM/*.htm
+MDK-ARM/*.log
+MDK-ARM/*_alog.txt
+MDK-ARM/*_analysis.xlsx
+MDK-ARM/*_sort_by_flash.csv
+MDK-ARM/*_sort_by_ram.csv
+MDK-ARM/JLinkLog.txt
+MDK-ARM/JLinkSettings.ini
+MDK-ARM/*.uvguix.*
+
+# Object and dependency files
+*.o
+*.d
+*.crf
+*.dep
+*.lnp
+*.iex
+*.Bak
+
+# Editor / local machine files
+.vscode/
+*.user
+*.tmp
